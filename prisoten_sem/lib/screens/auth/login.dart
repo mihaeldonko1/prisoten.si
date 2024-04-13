@@ -24,17 +24,14 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _microsoftSignIn = AadOAuth(Config(
-    // If you dont have a special tenant id, use "common"
     tenant: "common",
     clientId: "ba5f1ab0-1f35-4c7f-8c0d-592f4fdab989",
-    // Replace this with your client id ("Application (client) ID" in the Azure Portal)
     responseType: "code",
     scope: "User.Read",
     redirectUri: "http://localhost:49710/.auth/login/aad/callback",
     loader: const Center(child: CircularProgressIndicator()),
     navigatorKey: navigatorKey,
   ));
-
 
   bool _isLoggedIn = false;
   bool _isTeacher = false;
@@ -61,7 +58,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
         var mail = userData['mail'];
         var domain = mail?.split('@').last;
-
+        //Gmail je namesto profesorjevih accountov ker verjetno do njih nebo dostopa
         if(domain == "student.um.si" || domain == "gmail"){
           setState(() {
           _isCorrectMailType = true;
@@ -79,6 +76,7 @@ class _LoginScreenState extends State<LoginScreen> {
         setState(() {
           _isLoggedIn = true;
         });
+
 
       },
     );
@@ -117,3 +115,4 @@ Widget build(BuildContext context) {
 
 
 }
+
