@@ -1,9 +1,10 @@
 <?php
 
 use Illuminate\Support\Facades\Broadcast;
+use Illuminate\Support\Facades\Log;
 
 Broadcast::channel('attendanceRoom.{roomId}', function ($user, $roomId) {
-    // Implement any necessary logic to determine if $user can listen on $roomId
+    Log::info("tester1");
     return true; 
 });
 

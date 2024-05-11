@@ -17,6 +17,10 @@ document.getElementById('createRoomBtn').addEventListener('click', function() {
         axios.post('/create-room', { code: roomCode })
             .then(function(response) {
                 console.log('Room created with code:', response.data.roomCode);
+                window.Echo.channel('attendanceRoom.' + roomCode)
+                    .listen('AttendanceRoom', (e) => {
+                        console.log(e.username + ' has joined the room.');
+                });
             })
             .catch(function(error) {
                 console.error('Error creating room:', error);
@@ -33,12 +37,9 @@ document.getElementById('createRoomBtn').addEventListener('click', function() {
         
         axios.post('/join-room', { code: roomCode, name: userName })
             .then(function(response) {
+                console.log(response);
                 console.log('Joined room with code:', roomCode);
-
-                Echo.private('attendanceRoom.' + roomCode)
-                    .listen('AttendanceRoom', (e) => {
-                        console.log(e.username + ' has joined the room.');
-                    });
+                
             })
             .catch(function(error) {
                 console.error('Error joining room:', error);
