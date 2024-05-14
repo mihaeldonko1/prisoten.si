@@ -12,6 +12,7 @@ function session_join() {
   const handleJoinClick = () => {
     //TODO join v sejo, ki bo napisana v Laravelu
     console.log(inputValue);
+    console.log("asdasd");
   };
 
   return (
