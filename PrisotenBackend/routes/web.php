@@ -5,7 +5,7 @@ use App\Http\Controllers\RoomController;
 
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('rooms.createRoom');
 });
 
 Route::post('/create-room', [RoomController::class, 'create']);

@@ -1,3 +1,5 @@
+@extends('layouts.app')
+@section('content')
 <button id="createRoomBtn">Create Room</button>
 <span id="roomkey"></span>
 <button id="joinRoomBtn">Join Room</button>
@@ -6,7 +8,6 @@
     <input type="text" id="userNameInput" placeholder="Enter Your Name">
     <button id="joinBtn">Join</button>
 </div>
-@vite(['resources/css/app.css', 'resources/js/app.js'])
 
 <script>
 
@@ -46,3 +47,4 @@ document.getElementById('createRoomBtn').addEventListener('click', function() {
             });
     });
 </script>
+@endsection
