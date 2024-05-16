@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RoomController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -14,6 +15,9 @@ Route::get('/dashboard', function () {
 Route::get('/createRoom', function () {
     return view('createRoom');
 })->middleware(['auth', 'verified'])->name('createRoom');
+
+Route::post('/create-room', [RoomController::class, 'create']);
+Route::post('/join-room', [RoomController::class, 'join']);
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

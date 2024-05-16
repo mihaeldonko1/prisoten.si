@@ -1,0 +1,67 @@
+
+.timer-container {
+    text-align: center;
+}
+
+.circle {
+    position: relative;
+    width: 200px;
+    height: 200px;
+}
+
+.circle svg {
+    transform: rotate(-90deg);
+}
+
+.circle circle {
+    fill: none;
+    stroke-width: 10;
+    stroke-linecap: round;
+}
+
+.background-circle {
+    stroke: #e6e6e6;
+}
+
+.foreground-circle {
+    stroke: #3498db;
+    stroke-dasharray: 565; /* 2 * π * r, where r = 90 */
+    stroke-dashoffset: 565;
+    transition: stroke-dashoffset 1s linear;
+}
+
+.timer-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2em;
+    color: #3498db;
+}
+
+input[type="number"] {
+    padding: 10px;
+    font-size: 1em;
+    margin-top: 20px;
+}
+
+button {
+    padding: 10px 20px;
+    font-size: 1em;
+    background-color: #3498db;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 10px;
+    margin-left: 5px;
+}
+
+button:hover {
+    background-color: #2980b9;
+}
+
+.qrcode-row {
+    justify-content: center;
+    display: grid;
+}
