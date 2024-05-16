@@ -1,0 +1,1 @@
+<img src="{{ asset('cdn/img/prisoten-logo.gif') }}" id="page-logo" alt="Description of the image" style="height: 100px;">
