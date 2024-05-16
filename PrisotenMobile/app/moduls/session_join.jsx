@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { router } from 'expo-router';
 
 function session_join() {
   const { user, tokens } = useLocalSearchParams();
@@ -13,6 +14,13 @@ function session_join() {
     //TODO join v sejo, ki bo napisana v Laravelu
     console.log(inputValue);
     console.log("asdasd");
+    const TestingTrue = true;
+    if (TestingTrue) {
+      router.push({
+        pathname: '/moduls/session_biometric_location',
+      });
+    };
+
   };
 
   return (
