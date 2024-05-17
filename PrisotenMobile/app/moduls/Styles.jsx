@@ -56,12 +56,10 @@ export default StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    height: 200,
     overflow: 'hidden',
   },
   camera: {
-    flex: 1,
     width: '80%', // Adjust as needed
-    height: '80%', // Adjust as needed
+    height: '60%', // Adjust as needed
   },
 });

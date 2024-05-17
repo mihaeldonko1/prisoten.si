@@ -1,17 +1,17 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Button } from 'react-native';
+import React from 'react';
+import { View, Button } from 'react-native';
 import OfficeSignIn from './moduls/OfficeSignIn';
 import Styles from './moduls/Styles';
 
 
-import { router } from 'expo-router';
+import { router } from 'expo-router'; //Testing
 
 
 
 export default function App() {
   
 
-  const handleBarcodeSubpageClick = () => {
+  const handleBarcodeSubpageClick = () => {   //Testing
     router.push({
       pathname: '/moduls/QRScanner',
     });
@@ -20,7 +20,7 @@ export default function App() {
   return (
     <View style={Styles.mainContainer}>
       <OfficeSignIn />
-      <Button
+      <Button //TTi button je treba izbrisati.. Tukaj zaradi olajšave testiranja
         title="QR KODA"
         onPress={handleBarcodeSubpageClick}
         style={Styles.margin_vertical}
