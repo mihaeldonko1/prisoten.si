@@ -25,7 +25,7 @@ function session_join() {
 
   return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <Text>Dobrodošli, {userObj.name}</Text>
+      <Text style={Styles.margin_vertical}>Dobrodošli, {userObj.name}</Text>
       <TextInput
         style={{ height: 40, borderColor: 'gray', borderWidth: 1, marginTop: 20, width: 200, paddingHorizontal: 10 }}
         onChangeText={setInputValue}
@@ -34,7 +34,8 @@ function session_join() {
       />
       <Button
         title="Potrdi"
-        onPress={handleJoinClick}
+        onPress={handleJoinClick} 
+        style={Styles.margin_vertical}
       />
     </View>
   );
