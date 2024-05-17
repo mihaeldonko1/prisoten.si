@@ -19,12 +19,12 @@
                                 <div class="timer-text" id="timerText">0:00</div>
                             </div>
                             <div>
-                                <button onclick="addFiveMinutes()">+5 Minutes</button>
+                                <button onclick="addFiveMinutes()" class="btn btn-primary">+5 Minutes</button>
                             </div>
                         </div>
-                <span>Your room code:</span><br><span id="roomkey"></span><br>
+                <span id="room-code-txt" class="font-sans">Your room code:</span><span id="roomkey"></span><br>
                 <div class="qrcode-row">
-                    <canvas id="qrcode"></canvas>
+                    <canvas id="qrcode" style="height: 200px;width: 200px"></canvas>
                 </div>
             </div>
             <div class="col-md-3"></div>
@@ -67,6 +67,8 @@ document.getElementById('createRoomBtn').addEventListener('click', function() {
             .then(function(response) {
                 startTimer();
                 document.getElementById("timer").style.display = "grid";
+                document.getElementById("room-code-txt").style.display = "block";
+                document.getElementById('createRoomBtn').style.display = "none";
                 console.log('Room created with code:', response.data.roomCode);
                 generateQR(roomCode);
                 window.Echo.channel('attendanceRoom.' + roomCode)

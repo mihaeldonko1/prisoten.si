@@ -65,3 +65,14 @@ button:hover {
     justify-content: center;
     display: grid;
 }
+
+#room-code-txt{
+    display: none;
+    font-size: 32px;
+}
+
+#roomkey{
+    font-size: 40px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
