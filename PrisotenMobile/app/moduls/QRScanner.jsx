@@ -5,6 +5,11 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 
 import Styles from './Styles';
 
+
+//https://docs.expo.dev/versions/latest/sdk/camera/#permissionstatus
+//https://docs.expo.dev/config-plugins/introduction/
+//https://github.com/expo/fyi/blob/main/barcode-scanner-to-expo-camera.md
+
 function QRScanner() {
     const [permission, requestPermission] = useCameraPermissions();
 

@@ -14,6 +14,7 @@
     "expo-camera": "~15.0.8",
     "expo-constants": "~15.4.6",
     "expo-linking": "~6.2.2",
+    "expo-location": "~17.0.1",
     "expo-random": "~13.6.0",
     "expo-router": "~3.4.9",
     "expo-status-bar": "~1.11.1",
