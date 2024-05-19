@@ -3,6 +3,8 @@ import { View, Text, TouchableOpacity, Image, Animated } from 'react-native';
 import { router } from 'expo-router';
 import Styles from './Styles';
 import { Location } from './Location';
+//import { Biometrics } from './Biometrics';
+import { authenticateAsync } from 'expo-local-authentication';
 
 function session_biometric_location() {
     const imageSourceFingerprint = require('../../assets/fingerprint.png');
@@ -18,12 +20,31 @@ function session_biometric_location() {
 
 
     //Biometrija
+    let bio = false
     const handleFingreprintPress = () => {
         console.log('Fingerprint pressed!');
-        setFingerprintPressed(true); //vstavljena mora bit funkcija ki preverja fingerprint/faceid  
+        bio = Biometrics()
 
     };
 
+    async function Biometrics() {               //Funkcija za preverjanje biometrije začasno na tej lokaciji
+
+        const res = await authenticateAsync();
+
+        console.log(res.success);
+
+        
+        if (res.success) {
+            setFingerprintPressed(true);        
+        }
+
+
+    }
+    // useEffect(() => {
+    //     if (fingerprintPressed && bio) {
+    //         setFingerprintPressed(true);
+    //     }
+    // }, [fingerprintPressed, bio]);
 
     //Lokacija
     const handleLocationPress = () => {
@@ -34,15 +55,15 @@ function session_biometric_location() {
             console.log(`---------Loc: ${JSON.stringify(loc)}`);
             check(loc);
         }
-        
+
     };
     // setLocationPressed(true); //Vstavljena mora biti funkcija ki preverja locakijo
-    
+
     const check = (ch) => {         //Potrebni popravki
         if (ch == null) {
             setLocationPressed(false);
             console.log('False');
-        }else{
+        } else {
             setLocationPressed(true);
             console.log('True');
         }
