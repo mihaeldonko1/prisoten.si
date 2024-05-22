@@ -3,105 +3,95 @@ import { View, Text, TouchableOpacity, Image, Animated } from 'react-native';
 import { router } from 'expo-router';
 import Styles from './Styles';
 import { getLocation } from './Location';
-//import { Biometrics } from './Biometrics';
-import { authenticateAsync } from 'expo-local-authentication';
+import { Biometrics } from './Biometrics';
 
 function session_biometric_location() {
     const imageSourceFingerprint = require('../../assets/fingerprint.png');
     const imageSourceLocation = require('../../assets/location.png');
 
     //States for check-ups
-    const [fingerprintPressed, setFingerprintPressed] = useState(false);
-    const [locationPressed, setLocationPressed] = useState(false);
+    const [biometricsState, setbiometricsState] = useState(false);
+    const [locationState, setlocationState] = useState(false);
 
     //States for button colors
     const [fingerprintButtonColor, setFingerprintButtonColor] = useState(new Animated.Value(0));
     const [locationButtonColor, setLocationButtonColor] = useState(new Animated.Value(0));
 
 
+    //Location data state
+    const [location, setLocation] = useState(null);
+    const [biometState, setBiometState] = useState(null);
+
     //Biometrija
     let bio = false
-    const handleFingreprintPress = () => {
+    const handleFingreprintPress = async () => {
         console.log('Fingerprint pressed!');
-        bio = Biometrics()
+        bio = await Biometrics()
+        setBiometState(bio)
+        console.log(`bio state: ${bio}`);
 
     };
 
-    async function Biometrics() {               //Funkcija za preverjanje biometrije začasno na tej lokaciji
+    //Biometrija state
 
-        const res = await authenticateAsync();
-
-        console.log(res.success);
-
-        
-        if (res.success) {
-            setFingerprintPressed(true);        
+    useEffect(() => {
+        if (biometState) {
+            console.log(`biostate data: ${JSON.stringify(biometState)}`);
+            setbiometricsState(true) //Ta del kode povzroči reroute
         }
+    }, [biometState]);
 
 
-    }
 
     //Lokacija
-    const handleLocationPress = () => {
+    const handleLocationPress = async () => {
         console.log('Location pressed!');
-
-        if (!locationPressed) {
-            const loc = handleLocation() //Objekt s pridobljeno lokacijo
-            console.log(`---------Loc: ${JSON.stringify(loc)}`);
-            check(loc);
-        }
-
+        const loc = await getLocation();
+        if (loc) {
+            console.log(`Location received: ${JSON.stringify(loc)}`);
+            setLocation(loc);
+        } 
     };
-    // setLocationPressed(true); //Vstavljena mora biti funkcija ki preverja locakijo
 
-    const check = (ch) => {         //Potrebni popravki
-        if (ch == null) {
-            setLocationPressed(false);
-            console.log('False');
-        } else {
-            setLocationPressed(true);
-            console.log('True');
+    // Lokacija state
+    useEffect(() => {
+        if (location) {
+            console.log(`location data: ${JSON.stringify(location)}`);
+            setlocationState(true);   //Ta del kode povzroči reroute
         }
-    }
+    }, [location]);
 
-    async function handleLocation() {
-        const location = await getLocation();
-        console.log('Location:', location);
-        const loc = JSON.stringify(location)
-        alert(`Lokacija je ${loc}`)
-        return loc
-    }
 
     //Reroute na stran sprejema lokacije
     useEffect(() => {
-        if (fingerprintPressed && locationPressed) {
+        if (biometricsState && locationState) {
             router.push({
                 pathname: '/moduls/session_attendance',
             });
         }
-    }, [fingerprintPressed, locationPressed]);
+    }, [biometricsState, locationState]);
 
 
     //Animacija
     useEffect(() => {
-        if (fingerprintPressed) {
+        if (biometricsState) {
             Animated.timing(fingerprintButtonColor, {
                 toValue: 1,
                 duration: 500,
                 useNativeDriver: true,
             }).start();
         }
-    }, [fingerprintPressed, fingerprintButtonColor]);
+    }, [biometricsState, fingerprintButtonColor]);
 
     useEffect(() => {
-        if (locationPressed) {
+        if (locationState) {
             Animated.timing(locationButtonColor, {
                 toValue: 1,
                 duration: 500,
                 useNativeDriver: true,
             }).start();
         }
-    }, [locationPressed, locationButtonColor]);
+    }, [locationState, locationButtonColor]);
 
 
     const fingerprintButtonBackgroundColor = fingerprintButtonColor.interpolate({
