@@ -3379,6 +3379,13 @@ expo-auth-session@~5.4.0:
     expo-web-browser "~12.8.0"
     invariant "^2.2.4"
 
+expo-camera@~15.0.8:
+  version "15.0.8"
+  resolved "https://registry.yarnpkg.com/expo-camera/-/expo-camera-15.0.8.tgz#ec6b02aee0ae194efa98ee35f09ebc5f7a4479c6"
+  integrity sha512-pWiSBQRKjnenEOwMqbkfY41Jm0Xkt63ODPqQydKOgmFELrsuQjGbRla6QaZ8Eo6hVeuClfyVnUu3sKfnN+CmNA==
+  dependencies:
+    invariant "^2.2.4"
+
 expo-constants@~15.4.0, expo-constants@~15.4.3, expo-constants@~15.4.6:
   version "15.4.6"
   resolved "https://registry.yarnpkg.com/expo-constants/-/expo-constants-15.4.6.tgz#d4e9b21b70c5602457962700f2e90a75356b487b"
@@ -3424,6 +3431,11 @@ expo-linking@~6.2.0, expo-linking@~6.2.2:
   dependencies:
     expo-constants "~15.4.3"
     invariant "^2.2.4"
+
+expo-location@~17.0.1:
+  version "17.0.1"
+  resolved "https://registry.yarnpkg.com/expo-location/-/expo-location-17.0.1.tgz#3bdbf91066f1a40ec3468dc1807f3e106473f74c"
+  integrity sha512-m+OzotzlAXO3ZZ1uqW5GC25nXW868zN+ROyBA1V4VF6jGay1ZEs4URPglCVUDzZby2F5wt24cMzqDKw2IX6nRw==
 
 expo-modules-autolinking@1.11.1:
   version "1.11.1"

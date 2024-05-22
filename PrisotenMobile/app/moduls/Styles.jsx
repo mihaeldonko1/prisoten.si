@@ -40,4 +40,26 @@ export default StyleSheet.create({
   margin_vertical: {
     marginVertical: 10,
   },
+
+  //Barcode scanner
+  barcode_scanner: {
+    flex: 1,
+    flexDirection: "column",
+    justifyContent: "center",
+  },
+
+  mainContainer: {
+    flex: 1,
+    height: '10%',
+  },
+  cameraContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  camera: {
+    width: '80%', // Adjust as needed
+    height: '60%', // Adjust as needed
+  },
 });
