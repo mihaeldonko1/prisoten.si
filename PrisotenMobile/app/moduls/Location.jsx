@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 
 import * as Loc from 'expo-location';
 
-export async function Location() {
+export async function getLocation() {
 
     let { status } = await Loc.requestForegroundPermissionsAsync(); //Zahteva za uporabo lokacije
 
@@ -13,6 +13,7 @@ export async function Location() {
     } else {
         console.log('Permission denied!');
         alert('Potrebno je dovoljenje za lokacijo!')
+        return null;
     }
     
 }

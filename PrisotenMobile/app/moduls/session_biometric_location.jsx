@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, Image, Animated } from 'react-native';
 import { router } from 'expo-router';
 import Styles from './Styles';
-import { Location } from './Location';
+import { getLocation } from './Location';
 //import { Biometrics } from './Biometrics';
 import { authenticateAsync } from 'expo-local-authentication';
 
@@ -40,11 +40,6 @@ function session_biometric_location() {
 
 
     }
-    // useEffect(() => {
-    //     if (fingerprintPressed && bio) {
-    //         setFingerprintPressed(true);
-    //     }
-    // }, [fingerprintPressed, bio]);
 
     //Lokacija
     const handleLocationPress = () => {
@@ -70,7 +65,7 @@ function session_biometric_location() {
     }
 
     async function handleLocation() {
-        const location = await Location();
+        const location = await getLocation();
         console.log('Location:', location);
         const loc = JSON.stringify(location)
         alert(`Lokacija je ${loc}`)
