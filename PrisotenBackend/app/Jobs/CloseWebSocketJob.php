@@ -1,0 +1,61 @@
+<?php
+
+namespace App\Jobs;
+
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
+
+class CloseWebSocketJob implements ShouldQueue
+{
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    protected $roomCode;
+
+    /**
+     * Create a new job instance.
+     *
+     * @param string $roomCode
+     * @return void
+     */
+    public function __construct($roomCode)
+    {
+        $this->roomCode = $roomCode;
+    }
+
+    /**
+     * Execute the job.
+     *
+     * @return void
+     */
+    public function handle()
+    {
+        // Fetch the room from the rooms table
+        $room = DB::table('rooms')->where('code', $this->roomCode)->first();
+
+        if ($room) {
+            // Insert the room into the archive table
+            DB::table('archive')->insert([
+                'name' => $room->name,
+                'code' => $room->code,
+                'active' => $room->active,
+                'users' => $room->users,
+                'closed_at' => Carbon::now(), // Set the closed_at timestamp
+                'created_at' => $room->created_at, // Preserve the original created_at timestamp
+                'updated_at' => $room->updated_at, // Preserve the original updated_at timestamp
+            ]);
+
+            // Delete the room from the rooms table
+            DB::table('rooms')->where('code', $this->roomCode)->delete();
+
+            // Log the action
+            echo "Closed websocket and moved room code: {$this->roomCode} to archive" . PHP_EOL;
+        } else {
+            echo "Room code: {$this->roomCode} not found" . PHP_EOL;
+        }
+    }
+}

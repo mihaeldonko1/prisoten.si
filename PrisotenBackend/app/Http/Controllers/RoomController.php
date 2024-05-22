@@ -6,6 +6,7 @@ use App\Events\AttendanceRoom;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Models\Room;
+use App\Jobs\CloseWebSocketJob;
 
 class RoomController extends Controller
 {
@@ -33,13 +34,14 @@ class RoomController extends Controller
 
     public function join(Request $request)
     {
-        $code = $request->input('code');
+        $code = strtolower($request->input('code'));
         $name = $request->input('name');
         $roomName = 'attendanceRoom' . $code;
     
         $room = Room::where('code', $code)->where('active', true)->first();
     
         if (!$room) {
+            //DISCONNECTAJ WEBSOCKET
             return response()->json(['error' => 'Room does not exist'], 404);  // Room must exist to join
         }
     
@@ -59,6 +61,17 @@ class RoomController extends Controller
         event(new AttendanceRoom($code, $name));
     
         return response()->json(['message' => 'Joined room successfully', 'roomCode' => $code]);
+    }
+    
+    public function scheduleCloseWebSocket(Request $request)
+    {
+        $roomCode = $request->input('code');
+        $timeLeft = $request->input('timeLeft');
+
+        // Dispatch the job to close the websocket after $timeLeft seconds
+        CloseWebSocketJob::dispatch($roomCode)->delay(now()->addSeconds($timeLeft));
+
+        return response()->json(['status' => 'Job scheduled', 'roomCode' => $roomCode, 'timeLeft' => $timeLeft]);
     }
     
     
