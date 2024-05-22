@@ -41,12 +41,12 @@
 
 
 
-        {{--<button id="joinRoomBtn">Join Room</button>
+        <button id="joinRoomBtn">Join Room</button>
         <div id="joinRoomInputDiv" style="display: none;">
             <input type="text" id="roomCodeInput" placeholder="Enter Room Code">
             <input type="text" id="userNameInput" placeholder="Enter Your Name">
             <button id="joinBtn">Join</button>
-        </div>--}}
+        </div>
     </div>
     
 
@@ -63,13 +63,27 @@ document.getElementById('createRoomBtn').addEventListener('click', function() {
         var roomCode = Math.random().toString(36).substr(2, 8);
         document.getElementById("roomkey").textContent = roomCode;
         
-        axios.post('/create-room', { code: roomCode })
+        axios.post('/create-room', { code: roomCode })  
             .then(function(response) {
                 startTimer();
                 document.getElementById("timer").style.display = "grid";
                 document.getElementById("room-code-txt").style.display = "block";
                 document.getElementById('createRoomBtn').style.display = "none";
                 console.log('Room created with code:', response.data.roomCode);
+                
+                
+
+
+                axios.post('/schedule-close-websocket', { code: roomCode, timeLeft: 15 })
+                .then(function(response) {
+                    console.log('Close WebSocket job scheduled:', response.data);
+                })
+                .catch(function(error) {
+                    console.error('Error scheduling close WebSocket job:', error);
+                });
+
+
+
                 generateQR(roomCode);
                 window.Echo.channel('attendanceRoom.' + roomCode)
                     .listen('AttendanceRoom', (e) => {
