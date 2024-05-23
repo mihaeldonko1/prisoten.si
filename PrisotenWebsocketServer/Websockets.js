@@ -1,26 +1,31 @@
+const fs = require('fs');
+const https = require('https');
 const WebSocket = require('ws');
 
-const server = new WebSocket.Server({ port: 8080 });
+const server = https.createServer({
+  cert: fs.readFileSync('cert.pem'),
+  key: fs.readFileSync('key.pem')
+});
 
-const rooms = {};  // To store active rooms with their WebSocket connections
+const wss = new WebSocket.Server({ server });
+
+const rooms = {}; 
 
 function generateRoomCode() {
     let code;
     do {
         code = Math.floor(10000000 + Math.random() * 90000000).toString();
-    } while (rooms[code]);  // Ensure the code is unique
+    } while (rooms[code]);  
     return code;
 }
 
 function checkLegitimacy(email, biometric_rule, location) {
-    // Implement your legitimacy check logic here.
-    // For now, it returns true for demonstration purposes.
-    console.log(email,biometric_rule,location);
+    console.log(email, biometric_rule, location);
     console.log("confirmed");
     return true;
 }
 
-server.on('connection', (ws) => {
+wss.on('connection', (ws) => {
     ws.on('message', (message) => {
         const parsedMessage = JSON.parse(message);
 
@@ -51,7 +56,6 @@ server.on('connection', (ws) => {
                 console.log(`User with email ${email} joined room ${roomCode}`);
                 ws.send(JSON.stringify({ action: 'joined', roomCode: roomCode }));
 
-                // Notify the host
                 const host = rooms[roomCode].host;
                 if (host && host.readyState === WebSocket.OPEN) {
                     host.send(JSON.stringify({ action: 'user_joined', email: email, biometric_rule: biometric_rule, location: location }));
@@ -66,11 +70,9 @@ server.on('connection', (ws) => {
         const roomCode = ws.roomCode;
         if (roomCode && rooms[roomCode]) {
             if (rooms[roomCode].host === ws) {
-                // Host disconnected, notify all clients and remove the room
                 rooms[roomCode].clients.forEach(client => client.ws.send(JSON.stringify({ action: 'error', message: 'Host disconnected' })));
                 delete rooms[roomCode];
             } else {
-                // Remove client from the room
                 rooms[roomCode].clients = rooms[roomCode].clients.filter(client => client.ws !== ws);
             }
         }
@@ -78,4 +80,6 @@ server.on('connection', (ws) => {
     });
 });
 
-console.log('WebSocket server is running on ws://localhost:8080');
+server.listen(8080, () => {
+    console.log('WebSocket server is running on wss://localhost:8080');
+});
