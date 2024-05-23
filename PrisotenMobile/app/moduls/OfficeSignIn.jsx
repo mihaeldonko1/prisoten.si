@@ -61,7 +61,7 @@ export default function OfficeSignIn() {
                     const userInfo = await response.json();
 
                     router.push({
-                        pathname: '/moduls/session_join',
+                        pathname: '/moduls/Session_join',
                         params: {
                             user: JSON.stringify(userInfo),
                             tokens: JSON.stringify(tokenResult),

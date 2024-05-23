@@ -1,14 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, Image, Animated } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import Styles from './Styles';
 import { getLocation } from './Location';
 import { Biometrics } from './Biometrics';
+import { WebSocketObject } from './WebSocketObject';
 
-function session_biometric_location() {
+
+
+function Session_biometric_location() {
+    const { user, data } = useLocalSearchParams()
+    const userObj = JSON.parse(user);
+    const codeData = JSON.parse(data)
+    
     const imageSourceFingerprint = require('../../assets/fingerprint.png');
     const imageSourceLocation = require('../../assets/location.png');
-
+    
     //States for check-ups
     const [biometricsState, setbiometricsState] = useState(false);
     const [locationState, setlocationState] = useState(false);
@@ -20,14 +27,14 @@ function session_biometric_location() {
 
     //Location data state
     const [location, setLocation] = useState(null);
-    const [biometState, setBiometState] = useState(null);
+    const [biometricData, setBiometricData] = useState(null);
 
     //Biometrija
     let bio = false
     const handleFingreprintPress = async () => {
         console.log('Fingerprint pressed!');
         bio = await Biometrics()
-        setBiometState(bio)
+        setBiometricData(bio)
         console.log(`bio state: ${bio}`);
 
     };
@@ -35,11 +42,12 @@ function session_biometric_location() {
     //Biometrija state
 
     useEffect(() => {
-        if (biometState) {
-            console.log(`biostate data: ${JSON.stringify(biometState)}`);
+        if (biometricData) {
+            console.log(`biostate data: ${JSON.stringify(biometricData)}`);
             setbiometricsState(true) //Ta del kode povzroči reroute
+            console.log(`Podatki: ${userObj.email}, Code data: ${codeData}`);
         }
-    }, [biometState]);
+    }, [biometricData]);
 
 
 
@@ -62,14 +70,21 @@ function session_biometric_location() {
     }, [location]);
 
 
-    //Reroute na stran sprejema lokacije
+    //Preverjanje in ustvarjanje 
     useEffect(() => {
         if (biometricsState && locationState) {
-            router.push({
-                pathname: '/moduls/session_attendance',
-            });
+            // router.push({
+            //     pathname: '/moduls/Session_attendance',
+            // });
+            const oseba = new WebSocketObject('join', codeData, userObj.name, userObj.email, biometricData, location)
+            alert(JSON.stringify(oseba))
+            console.log(JSON.stringify(oseba));
         }
     }, [biometricsState, locationState]);
+
+
+
+
 
 
     //Animacija
@@ -131,4 +146,4 @@ function session_biometric_location() {
 }
 
 
-export default session_biometric_location;
+export default Session_biometric_location;

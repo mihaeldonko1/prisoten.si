@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text } from 'react-native';
 
-function session_attendance() {
+function Session_attendance() {
     
     return (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -10,4 +10,4 @@ function session_attendance() {
     )
 }
 
-export default session_attendance;
+export default Session_attendance;

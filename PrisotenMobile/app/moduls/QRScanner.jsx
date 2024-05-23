@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, Button } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 
 import Styles from './Styles';
@@ -11,6 +11,9 @@ import Styles from './Styles';
 //https://github.com/expo/fyi/blob/main/barcode-scanner-to-expo-camera.md
 
 function QRScanner() {
+    const { user } = useLocalSearchParams()
+    const userObj = JSON.parse(user);
+
     const [permission, requestPermission] = useCameraPermissions();
 
     const [scanned, setScanned] = useState(false);
@@ -37,7 +40,11 @@ function QRScanner() {
         const TestingTrue = true //Logika ista kot pri session_join da za reroute availability
         if (TestingTrue) {
             router.push({
-                pathname: '/moduls/session_biometric_location',
+                pathname: '/moduls/Session_biometric_location',
+                params: {
+                    user: JSON.stringify(userObj),
+                    data: JSON.stringify(data),
+                  },
             });
         } else {
             alert('Napaka pri branju QR kode!')

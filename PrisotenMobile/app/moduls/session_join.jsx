@@ -5,13 +5,15 @@ import { router } from 'expo-router';
 
 import Styles from './Styles';
 
-function session_join() {
+function Session_join() {
   const { user, tokens } = useLocalSearchParams();
   const tokensObj = JSON.parse(tokens);
   const userObj = JSON.parse(user);
-
+  
   const [inputValue, setInputValue] = useState('');
 
+
+  //Normal on click 
   const handleJoinClick = () => {
     //TODO join v sejo, ki bo napisana v Laravelu
     console.log(inputValue);
@@ -19,15 +21,25 @@ function session_join() {
     const TestingTrue = true;
     if (TestingTrue) {
       router.push({
-        pathname: '/moduls/session_biometric_location',
+        pathname: '/moduls/Session_biometric_location',
+        params: {
+          user: JSON.stringify(userObj),
+          data: JSON.stringify(inputValue),
+        },
       });
     };
 
   };
 
+
+  //Barcode scanner
   const handleBarcodeSubpageClick = () => {
+    
     router.push({
       pathname: '/moduls/QRScanner',
+      params: {
+        user: JSON.stringify(userObj),
+      },
     });
   };
 
@@ -45,7 +57,7 @@ function session_join() {
         onPress={handleJoinClick} 
         style={Styles.margin_vertical}
       />
-      <Button //TTi button je treba izbrisati.. Tukaj zaradi olajšave testiranja
+      <Button
         title="QR KODA"
         onPress={handleBarcodeSubpageClick}
         style={Styles.margin_vertical}
@@ -54,4 +66,4 @@ function session_join() {
   );
 }
 
-export default session_join;
+export default Session_join;
