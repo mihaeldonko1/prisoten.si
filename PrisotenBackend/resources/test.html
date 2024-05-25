@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF8">
+<title>WebSocket Test</title>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const ws = new WebSocket('wss://localhost:8080');
+    ws.onopen = () => {
+      console.log('Connected');
+      createMessage(ws);
+    };
+    ws.onmessage = (event) => {
+      console.log('Received:', event.data);
+    };
+    ws.onerror = (event) => {
+      console.error('WebSocket error:', event);
+    };
+    ws.onclose = (event) => {
+      console.log('WebSocket closed:', event);
+    };
+  });
+ 
+
+
+function createMessage(socket) {
+    const message = {
+        "action": "create",
+        "name": "Miha Donko",
+        "email": "YOUR_EMAIL@example.com",
+        "location": {
+            "coords": {
+                "accuracy": 100,
+                "longitude": 15.1573861,
+                "altitude": 468.1999816894531,
+                "heading": 0,
+                "latitude": 46.5909305,
+                "altitudeAccuracy": 100,
+                "speed": 0
+            },
+            "mocked": false,
+            "timestamp": 1716478829145
+        },
+        "diameter": 100
+    };
+
+    socket.send(JSON.stringify(message));
+}
+</script>
+</head>
+<body>
+<h1>WebSocket Client</h1>
+</body>
+</html>

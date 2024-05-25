@@ -5,10 +5,10 @@
             {{ __('Create room') }}
         </h2>
     </x-slot>
-            <div class="container">
+            <div class="container" >
                 <div class="row">
                     <div class="col-md-3"></div>
-                    <div class="col-md-6 text-center" style="background-color:white; height: 50vh; margin-top: 30px; border-radius: 5px">
+                    <div class="col-md-6 text-center" style="background-color:white; min-height: 50vh; margin-top: 30px; border-radius: 5px">
                         <button id="createRoomBtn" class="btn btn-dark mt-3">Create Room</button><br>
                         <div id="timer" class="timer-container" style="display: none;justify-content: center;">
                             <div class="circle">
@@ -26,9 +26,12 @@
                 <div class="qrcode-row">
                     <canvas id="qrcode" style="height: 200px;width: 200px"></canvas>
                 </div>
+                <div id="joined_users" class="row">
+                    <h3 id="user_list" style="display: none">List of joined users:</h3>
+                </div>
             </div>
-            <div class="col-md-3"></div>
         </div>
+
         
 
 
@@ -38,15 +41,6 @@
 
 
 
-
-
-
-        <button id="joinRoomBtn">Join Room</button>
-        <div id="joinRoomInputDiv" style="display: none;">
-            <input type="text" id="roomCodeInput" placeholder="Enter Room Code">
-            <input type="text" id="userNameInput" placeholder="Enter Your Name">
-            <button id="joinBtn">Join</button>
-        </div>
     </div>
     
 
@@ -60,59 +54,94 @@ function generateQR(code){
 }
 
 document.getElementById('createRoomBtn').addEventListener('click', function() {
-        var roomCode = Math.random().toString(36).substr(2, 8);
-        document.getElementById("roomkey").textContent = roomCode;
-        
-        axios.post('/create-room', { code: roomCode })  
-            .then(function(response) {
+    const socket = new WebSocket('wss://localhost:8080');
+
+    socket.onopen = function() {
+        console.log('WebSocket connection established');
+        createMessage(socket);
+    };
+
+    socket.onmessage = function(event) {
+        const dataObject = JSON.parse(event.data);
+        const actionValue = dataObject.action;
+        console.log(dataObject);
+        if(actionValue == "created"){
+                let genRoomCode = dataObject.roomCode;
                 startTimer();
                 document.getElementById("timer").style.display = "grid";
                 document.getElementById("room-code-txt").style.display = "block";
                 document.getElementById('createRoomBtn').style.display = "none";
-                console.log('Room created with code:', response.data.roomCode);
-                
-                
+                document.getElementById("roomkey").innerHTML = genRoomCode;
+                generateQR(genRoomCode);
+        }else if(actionValue == "user_joined"){
+            document.getElementById("user_list").style.display = "block"
+            addUser(dataObject.name, dataObject.email, `{{ asset('cdn/img/360_F_553796090_XHrE6R9jwmBJUMo9HKl41hyHJ5gqt9oz.jpg') }}`);
+        }
+    };
+
+    socket.onerror = function(error) {
+        console.error('WebSocket error: ', error);
+    };
+
+    socket.onclose = function(event) {
+        console.log('WebSocket connection closed', event);
+    };
+});
+
+function addUser(name, email, avatarSrc) {
+    const userDiv = document.createElement('div');
+    userDiv.className = 'col-md-6 d-flex justify-content-center align-items-center';
+
+    const userImage = document.createElement('img');
+    userImage.src = avatarSrc;
+    userImage.id = 'user-logo';
+    userImage.alt = 'User avatar';
+    userImage.style.height = '20px';
+    userImage.style.width = '20px';
+    userImage.style.marginRight = '10px';
+
+    const userInfoDiv = document.createElement('div');
+    userInfoDiv.className = 'user-info';
+
+    const userName = document.createElement('h4');
+    userName.textContent = name;
+    userInfoDiv.appendChild(userName);
 
 
-                axios.post('/schedule-close-websocket', { code: roomCode, timeLeft: 15 })
-                .then(function(response) {
-                    console.log('Close WebSocket job scheduled:', response.data);
-                })
-                .catch(function(error) {
-                    console.error('Error scheduling close WebSocket job:', error);
-                });
+    const userEmail = document.createElement('p');
+    userEmail.textContent = email;
+    userInfoDiv.appendChild(userEmail);
 
+    userDiv.appendChild(userImage);
+    userDiv.appendChild(userInfoDiv);
 
+    document.getElementById('joined_users').appendChild(userDiv);
+}
 
-                generateQR(roomCode);
-                window.Echo.channel('attendanceRoom.' + roomCode)
-                    .listen('AttendanceRoom', (e) => {
-                        console.log(e.username + ' has joined the room.');
-                });
-            })
-            .catch(function(error) {
-                console.error('Error creating room:', error);
-            });
-    });
+// Example usage
+function createMessage(socket) {
+    const message = {
+        "action": "create",
+        "name": "Miha Donko",
+        "email": "YOUR_EMAIL@example.com",
+        "location": {
+            "coords": {
+                "accuracy": 100,
+                "longitude": 15.1573861,
+                "altitude": 468.1999816894531,
+                "heading": 0,
+                "latitude": 46.5909305,
+                "altitudeAccuracy": 100,
+                "speed": 0
+            },
+            "mocked": false,
+            "timestamp": 1716478829145
+        },
+        "diameter": 100
+    };
 
-    document.getElementById('joinRoomBtn').addEventListener('click', function() {
-        document.getElementById('joinRoomInputDiv').style.display = 'block';
-    });
-
-    document.getElementById('joinBtn').addEventListener('click', function() {
-        var roomCode = document.getElementById('roomCodeInput').value;
-        var userName = document.getElementById('userNameInput').value;
-        
-        axios.post('/join-room', { code: roomCode, name: userName })
-            .then(function(response) {
-                console.log(response);
-                console.log('Joined room with code:', roomCode);
-                
-            })
-            .catch(function(error) {
-                console.error('Error joining room:', error);
-            });
-    });
+    socket.send(JSON.stringify(message));
+}
 </script>
 <script>
         let timer;
@@ -139,7 +168,6 @@ document.getElementById('createRoomBtn').addEventListener('click', function() {
             foregroundCircle.style.transition = 'none';
             foregroundCircle.style.strokeDashoffset = circleLength;
             
-            // Ensure the browser renders the initial state before applying the transition
             requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
                     foregroundCircle.style.transition = 'stroke-dashoffset 1s linear';

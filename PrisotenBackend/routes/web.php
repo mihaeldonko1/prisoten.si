@@ -18,9 +18,6 @@ Route::get('/createRoom', function () {
     return view('createRoom');
 })->middleware(['auth', 'verified'])->name('createRoom');
 
-Route::post('/create-room', [RoomController::class, 'create']);
-Route::post('/join-room', [RoomController::class, 'join']);
-
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
