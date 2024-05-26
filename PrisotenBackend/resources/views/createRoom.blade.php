@@ -1,14 +1,14 @@
 
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('Create room') }}
+        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight" style="text-align:center">
+            {{ __('Ustvari sobo') }}
         </h2>
     </x-slot>
-            <div class="container">
+            <div class="container-fluid">
                 <div class="row">
-                    <div class="col-md-3"></div>
-                    <div class="col-md-6 text-center" style="background-color:white; height: 50vh; margin-top: 30px; border-radius: 5px">
+                <div class="col-md-1"></div>
+                    <div class="col-md-10 text-center" style="background-color:white; height: 50vh; margin-top: 30px; border-radius: 5px">
                         <button id="createRoomBtn" class="btn btn-dark mt-3">Create Room</button><br>
                         <div id="timer" class="timer-container" style="display: none;justify-content: center;">
                             <div class="circle">
@@ -27,7 +27,7 @@
                     <canvas id="qrcode" style="height: 200px;width: 200px"></canvas>
                 </div>
             </div>
-            <div class="col-md-3"></div>
+            <div class="col-md-1"></div>
         </div>
         
 

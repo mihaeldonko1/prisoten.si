@@ -18,6 +18,10 @@ Route::get('/createRoom', function () {
     return view('createRoom');
 })->middleware(['auth', 'verified'])->name('createRoom');
 
+Route::get('/statistics', function () {
+    return view('statistics');
+})->middleware(['auth', 'verified'])->name('statistics');
+
 Route::post('/create-room', [RoomController::class, 'create']);
 Route::post('/join-room', [RoomController::class, 'join']);
 
