@@ -60,7 +60,7 @@ document.getElementById('createRoomBtn').addEventListener('click', function() {
         console.log('WebSocket connection established');
         createMessage(socket);
     };
-
+    
     socket.onmessage = function(event) {
         const dataObject = JSON.parse(event.data);
         const actionValue = dataObject.action;
