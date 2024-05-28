@@ -113,6 +113,15 @@ wss.on('connection', (ws) => {
             if (host && host.readyState === WebSocket.OPEN) {
                 host.send(JSON.stringify({ action: 'user_joined', name: name, email: email, biometric_rule: biometric_rule, location: location }));
             }
+        } else if (parsedMessage.action === 'room_exists') {
+            const { roomCode } = parsedMessage;
+            if (!roomCode) {
+                ws.send(JSON.stringify({ action: 'error', message: 'Room code is required' }));
+                return;
+            }
+
+            const exists = !!rooms[roomCode];
+            ws.send(JSON.stringify({ action: 'room_exists', roomCode: roomCode, exists: exists }));
         }
     });
 
