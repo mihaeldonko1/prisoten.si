@@ -1,11 +1,8 @@
 const fs = require('fs');
-const https = require('https');
+const http = require('http');
 const WebSocket = require('ws');
 
-const server = https.createServer({
-  cert: fs.readFileSync('cert.pem'),
-  key: fs.readFileSync('key.pem')
-});
+const server = http.createServer();
 
 const wss = new WebSocket.Server({ server });
 
@@ -140,5 +137,5 @@ wss.on('connection', (ws) => {
 });
 
 server.listen(8080, () => {
-    console.log('WebSocket server is running on wss://localhost:8080');
+    console.log('WebSocket server is running on ws://localhost:8080');
 });
