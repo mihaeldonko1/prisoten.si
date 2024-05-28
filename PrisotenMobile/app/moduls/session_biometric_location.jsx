@@ -9,9 +9,10 @@ import { WebSocketObject } from './WebSocketObject';
 
 
 function Session_biometric_location() {
-    const { user, data } = useLocalSearchParams()
+    const { user, data, websocket } = useLocalSearchParams()
     const userObj = JSON.parse(user);
-    const codeData = JSON.parse(data)
+    const codeData = JSON.parse(data);
+    const ws = websocket;
     
     const imageSourceFingerprint = require('../../assets/fingerprint.png');
     const imageSourceLocation = require('../../assets/location.png');

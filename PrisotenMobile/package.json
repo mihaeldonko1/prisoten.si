@@ -25,6 +25,7 @@
     "react-native-msal": "^4.0.4",
     "react-native-safe-area-context": "4.8.2",
     "react-native-screens": "~3.29.0",
+    "react-native-websocket": "^1.0.2",
     "react-native-webview": "^13.8.7"
   },
   "devDependencies": {
