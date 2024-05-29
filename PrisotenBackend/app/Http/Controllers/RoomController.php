@@ -20,10 +20,10 @@ class RoomController extends Controller
         }
     
         $room = new Room;
+        $room->user_id = $name;
         $room->code = $code;
-        $room->name = $name;
-        $room->users = json_encode([$name]);  // Initialize the users array with the creator
         $room->active = true;
+        $room->students = json_encode([$name]);  // Initialize the users array with the creator
         $room->save();
     
         event(new AttendanceRoom($code, $name));
@@ -54,8 +54,8 @@ class RoomController extends Controller
         }
     
         // Add the new user and save
-        $users[] = $name;
-        $room->users = json_encode($users);
+        $students[] = $name;
+        $room->students = json_encode($students);
         $room->save();
     
         event(new AttendanceRoom($code, $name));
@@ -70,6 +70,7 @@ class RoomController extends Controller
 
         // Dispatch the job to close the websocket after $timeLeft seconds
         CloseWebSocketJob::dispatch($roomCode)->delay(now()->addSeconds($timeLeft));
+        //Log::info($roomCode);
 
         return response()->json(['status' => 'Job scheduled', 'roomCode' => $roomCode, 'timeLeft' => $timeLeft]);
     }

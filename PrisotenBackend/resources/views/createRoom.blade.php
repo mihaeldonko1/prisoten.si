@@ -67,6 +67,17 @@ document.getElementById('createRoomBtn').addEventListener('click', function() {
         console.log(dataObject);
         if(actionValue == "created"){
                 let genRoomCode = dataObject.roomCode;
+
+
+                axios.post('/schedule-close-websocket', { code: genRoomCode, timeLeft: 15 })
+                .then(function(response) {
+                    console.log('Close WebSocket job scheduled:', response.data);
+                })
+                .catch(function(error) {
+                    console.error('Error scheduling close WebSocket job:', error);
+                });
+
+
                 startTimer();
                 document.getElementById("timer").style.display = "grid";
                 document.getElementById("room-code-txt").style.display = "block";
