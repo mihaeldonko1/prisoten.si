@@ -7,26 +7,41 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Models\Room;
 use App\Jobs\CloseWebSocketJob;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
+//use Illuminate\Support\Facades\Auth;
 
 class RoomController extends Controller
 {
     public function create(Request $request)
     {
+        //dd($user = $request->user());
+        //Log::info("test XXX");
         $code = $request->input('code');
-        $name = $request->input('name');
+        $id = $request->input('id');
     
         if (empty($name)) {
             $name = 'admin';
         }
     
         $room = new Room;
-        $room->user_id = $name;
+        $room->user_id = $id;
         $room->code = $code;
         $room->active = true;
         $room->students = json_encode([$name]);  // Initialize the users array with the creator
-        $room->save();
-    
-        event(new AttendanceRoom($code, $name));
+        $room->classroom_id = 1;
+        //$room->save();
+        
+
+        DB::table('rooms')->insert([
+            'user_id' => $room->user_id,
+            'code' => $room->code,
+            'active' => $room->active,
+            'students' => $room->students,
+            'classroom_id' => $room->classroom_id,
+            'created_at' => Carbon::now(), // Set the closed_at timestamp
+            'updated_at' => Carbon::now(), // Set the closed_at timestamp
+        ]);
     
         return response()->json(['roomCode' => $code, 'message' => 'Room created successfully']);
     }

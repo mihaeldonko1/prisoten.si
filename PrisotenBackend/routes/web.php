@@ -10,6 +10,8 @@ Route::get('/', function () {
 
 Route::post('/schedule-close-websocket', [RoomController::class, 'scheduleCloseWebSocket']);
 
+Route::post('/create-room', [RoomController::class, 'create']);
+
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');

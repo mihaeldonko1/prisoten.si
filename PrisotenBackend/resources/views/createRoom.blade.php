@@ -78,6 +78,15 @@ document.getElementById('createRoomBtn').addEventListener('click', function() {
                 });
 
 
+                axios.post('/create-room', { code: genRoomCode, id: '{{ Auth::user()->id }}' })
+                .then(function(response) {
+                    console.log('created room x');
+                })
+                .catch(function(error) {
+                    console.error('error room x');
+                });
+
+
                 startTimer();
                 document.getElementById("timer").style.display = "grid";
                 document.getElementById("room-code-txt").style.display = "block";
