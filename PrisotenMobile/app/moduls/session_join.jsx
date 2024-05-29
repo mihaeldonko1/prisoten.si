@@ -34,7 +34,7 @@ function Session_join() {
 
   //Barcode scanner
   const handleBarcodeSubpageClick = () => {
-    
+
     router.push({
       pathname: '/moduls/QRScanner',
       params: {
@@ -54,7 +54,7 @@ function Session_join() {
       />
       <Button
         title="Potrdi"
-        onPress={handleJoinClick} 
+        onPress={handleJoinClick}
         style={Styles.margin_vertical}
       />
       <Button
