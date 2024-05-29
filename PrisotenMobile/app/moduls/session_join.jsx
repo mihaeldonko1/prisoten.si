@@ -32,12 +32,13 @@ function Session_join() {
       console.log('Received response:', response);
 
       if (response.action === 'room_exists' && response.exists) {
+        ws.close();
+        console.log('WebSocket connection manually closed');
         router.push({
           pathname: '/moduls/Session_biometric_location',
           params: {
             user: JSON.stringify(userObj),
             data: JSON.stringify(inputValue),
-            websocket: ws,
           },
         });
       } else {

@@ -9,16 +9,42 @@ import { WebSocketObject } from './WebSocketObject';
 
 
 function Session_biometric_location() {
-    const { user, data, websocket } = useLocalSearchParams()
+    const { user, data } = useLocalSearchParams()
     const userObj = JSON.parse(user);
     const codeData = JSON.parse(data);
-    const ws = websocket;
+
+    ws = new WebSocket('ws://86.58.51.113:8080');
+
+    ws.onopen = () => {
+    console.log('WebSocket connection opened');
+    };
+
+    ws.onmessage = (e) => {
+    const response = JSON.parse(e.data);
+    console.log('Received response:', response);
+
+    if (response.action === 'joined') {
+        router.push({
+             pathname: '/moduls/Session_attendance',
+        });
+    } else {
+        console.error('Room does not exist or invalid response');
+    }
+    };
+
+    ws.onerror = (e) => {
+    console.error('WebSocket error:', e.message);
+    };
+
+    ws.onclose = (e) => {
+    console.log('WebSocket connection closed:', e.code, e.reason);
+    };
     
     const imageSourceFingerprint = require('../../assets/fingerprint.png');
     const imageSourceLocation = require('../../assets/location.png');
     
     //States for check-ups
-    const [biometricsState, setbiometricsState] = useState(false);
+    const [biometricsState, setbiometricsState] = useState(true);
     const [locationState, setlocationState] = useState(false);
 
     //States for button colors
@@ -74,12 +100,9 @@ function Session_biometric_location() {
     //Preverjanje in ustvarjanje 
     useEffect(() => {
         if (biometricsState && locationState) {
-            // router.push({
-            //     pathname: '/moduls/Session_attendance',
-            // });
             const oseba = new WebSocketObject('join', codeData, userObj.name, userObj.email, biometricData, location)
-            alert(JSON.stringify(oseba))
             console.log(JSON.stringify(oseba));
+            ws.send(JSON.stringify(oseba))
         }
     }, [biometricsState, locationState]);
 
