@@ -40,10 +40,11 @@ class CloseWebSocketJob implements ShouldQueue
         if ($room) {
             // Insert the room into the archive table
             DB::table('archive')->insert([
-                'name' => $room->name,
+                'user_id' => $room->user_id,
                 'code' => $room->code,
                 'active' => $room->active,
-                'users' => $room->users,
+                'students' => $room->students,
+                'classroom_id' => $room->classroom_id,
                 'closed_at' => Carbon::now(), // Set the closed_at timestamp
                 'created_at' => $room->created_at, // Preserve the original created_at timestamp
                 'updated_at' => $room->updated_at, // Preserve the original updated_at timestamp
