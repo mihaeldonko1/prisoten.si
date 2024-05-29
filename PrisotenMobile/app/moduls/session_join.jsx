@@ -3,6 +3,7 @@ import { View, Text, TextInput, Button } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { router } from 'expo-router';
 
+
 import Styles from './Styles';
 
 function Session_join() {
@@ -15,20 +16,42 @@ function Session_join() {
 
   //Normal on click 
   const handleJoinClick = () => {
-    //TODO join v sejo, ki bo napisana v Laravelu
-    console.log(inputValue);
-    console.log("asdasd");
-    const TestingTrue = true;
-    if (TestingTrue) {
-      router.push({
-        pathname: '/moduls/Session_biometric_location',
-        params: {
-          user: JSON.stringify(userObj),
-          data: JSON.stringify(inputValue),
-        },
-      });
+    const ws = new WebSocket('ws://86.58.51.113:8080');
+
+    ws.onopen = () => {
+      console.log('WebSocket connection opened');
+      const message = {
+        action: 'room_exists',
+        roomCode: inputValue,
+      };
+      ws.send(JSON.stringify(message));
     };
 
+    ws.onmessage = (e) => {
+      const response = JSON.parse(e.data);
+      console.log('Received response:', response);
+
+      if (response.action === 'room_exists' && response.exists) {
+        router.push({
+          pathname: '/moduls/Session_biometric_location',
+          params: {
+            user: JSON.stringify(userObj),
+            data: JSON.stringify(inputValue),
+            websocket: ws,
+          },
+        });
+      } else {
+        console.error('Room does not exist or invalid response');
+      }
+    };
+
+    ws.onerror = (e) => {
+      console.error('WebSocket error:', e.message);
+    };
+
+    ws.onclose = (e) => {
+      console.log('WebSocket connection closed:', e.code, e.reason);
+    };
   };
 
 

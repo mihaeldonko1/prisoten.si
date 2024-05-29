@@ -1,11 +1,8 @@
 const fs = require('fs');
-const https = require('https');
+const http = require('http');
 const WebSocket = require('ws');
 
-const server = https.createServer({
-  cert: fs.readFileSync('cert.pem'),
-  key: fs.readFileSync('key.pem')
-});
+const server = http.createServer();
 
 const wss = new WebSocket.Server({ server });
 
@@ -113,6 +110,15 @@ wss.on('connection', (ws) => {
             if (host && host.readyState === WebSocket.OPEN) {
                 host.send(JSON.stringify({ action: 'user_joined', name: name, email: email, biometric_rule: biometric_rule, location: location }));
             }
+        } else if (parsedMessage.action === 'room_exists') {
+            const { roomCode } = parsedMessage;
+            if (!roomCode) {
+                ws.send(JSON.stringify({ action: 'error', message: 'Room code is required' }));
+                return;
+            }
+
+            const exists = !!rooms[roomCode];
+            ws.send(JSON.stringify({ action: 'room_exists', roomCode: roomCode, exists: exists }));
         }
     });
 
@@ -131,5 +137,5 @@ wss.on('connection', (ws) => {
 });
 
 server.listen(8080, () => {
-    console.log('WebSocket server is running on wss://localhost:8080');
+    console.log('WebSocket server is running on ws://localhost:8080');
 });
