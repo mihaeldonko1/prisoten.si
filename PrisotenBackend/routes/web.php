@@ -9,16 +9,16 @@ Route::get('/', function () {
 });
 
 Route::post('/schedule-close-websocket', [RoomController::class, 'scheduleCloseWebSocket']);
+Route::post('/update-close-websocket', [RoomController::class, 'updateScheduleCloseWebSocket']);
 
 Route::post('/create-room', [RoomController::class, 'create']);
+Route::post('/join-room', [RoomController::class, 'join']);
 
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::get('/createRoom', function () {
-    return view('createRoom');
-})->middleware(['auth', 'verified'])->name('createRoom');
+Route::get('/createRoom', [RoomController::class, 'classroomServe'])->middleware(['auth', 'verified'])->name('createRoom');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
