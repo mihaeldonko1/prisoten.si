@@ -5,11 +5,36 @@
             {{ __('Create room') }}
         </h2>
     </x-slot>
-            <div class="container" >
+        <div id="setupSettings" style="position: fixed; background-color: #808080a8; height: 100vh; width: 100vw;z-index; 10000;display:none">
+            <div class="container" style="margin-top: 50px">
+
+                <div class="create-card text-center" style="background-color: white; border-radius: 10px">
+                    <div class="row justify-content-end">
+                        <img id="close-room-modal" src="{{ asset('cdn/img/75519.png') }}" style="width: 50px;margin-right: 20px;margin-top: 20px;" />
+                    </div>
+                    <h1 class="mb-3 mt-5" style="font-size: 2.5rem;padding-top: 50px;">Create a custom room</h1>
+                    <div class="form-group" style="padding-left: 150px; padding-right: 150px">
+                        <select class="form-select" name="your_select_name" id="your_select_id">
+                        <option value="" selected>Select a classroom...</option>
+                            @foreach($classrooms as $classroom)
+                                <option value="{{ $classroom['location'] }}" data-id="{{ $classroom['id'] }}">{{ $classroom['name'] }}-{{ $classroom['building'] }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="slider-container">
+                        <label for="slider">Select acceptance range for students:</label>
+                        <input type="range" class="form-control-range" id="slider" min="10" max="300" value="50" oninput="updateValue(this.value)">
+                        <p>Value: <span id="sliderValue">50</span> meters</p>
+                    </div>
+                    <button id="createRoomBtn" class="btn btn-dark mt-3" style="margin-bottom: 50px">Create Room</button><br>
+                </div>
+            </div>
+        </div>
+        <div class="container" >
                 <div class="row">
                     <div class="col-md-3"></div>
                     <div class="col-md-6 text-center" style="background-color:white; min-height: 50vh; margin-top: 30px; border-radius: 5px">
-                        <button id="createRoomBtn" class="btn btn-dark mt-3">Create Room</button><br>
+                        <button id="openCreateRoomModal" class="btn btn-dark mt-3">Create Room</button><br>
                         <div id="timer" class="timer-container" style="display: none;justify-content: center;">
                             <div class="circle">
                                 <svg width="200" height="200">
@@ -31,14 +56,80 @@
                 </div>
             </div>
         </div>
+    </div>
+
+
+<script>
+    var dataId = null;
+    var roomCrafted = null;
+
+    function updateValue(value) {
+        document.getElementById('sliderValue').textContent = value;
+    }
+
+    function generateQR(code){
+        QRCode.toCanvas(document.getElementById('qrcode'), code, { errorCorrectionLevel: 'H' }, function (error) {
+                if (error) console.error(error);
+                console.log('QR code generated successfully!');
+            });
+    }
+
+    document.getElementById('close-room-modal').addEventListener('click', function() { 
+        document.getElementById('setupSettings').style.display = "none";
+    });
+
+    document.getElementById('openCreateRoomModal').addEventListener('click', function() { 
+        document.getElementById('setupSettings').style.display = "block";
+    });
+
+    document.getElementById('createRoomBtn').addEventListener('click', function() {
+        const socket = new WebSocket('ws://86.58.51.113:8080');
+
+        socket.onopen = function() {
+            console.log('WebSocket connection established');
+            createMessage(socket);
+        };
 
         
+        socket.onmessage = function(event) {
+            const dataObject = JSON.parse(event.data);
+            const actionValue = dataObject.action;
+            console.log(dataObject);
+            if(actionValue == "created"){
+                    let genRoomCode = dataObject.roomCode;
+                    roomCrafted = genRoomCode;
+
+                    axios.post('/schedule-close-websocket', { code: genRoomCode, timeLeft: 15 })
+                    .then(function(response) {
+                        console.log('Close WebSocket job scheduled:', response.data);
+                    })
+                    .catch(function(error) {
+                        console.error('Error scheduling close WebSocket job:', error);
+                    });
 
 
+                    axios.post('/create-room', { code: genRoomCode, id: '{{ Auth::user()->id }}', classroom: dataId })
+                    .then(function(response) {
+                        console.log('created room x');
+                    })
+                    .catch(function(error) {
+                        console.error('error room x');
+                    });
 
 
+                    startTimer();
+                    document.getElementById("timer").style.display = "grid";
+                    document.getElementById("room-code-txt").style.display = "block";
+                    document.getElementById('openCreateRoomModal').style.display = "none";
+                    document.getElementById("roomkey").innerHTML = genRoomCode;
+                    generateQR(genRoomCode);
+                    document.getElementById('setupSettings').style.display = "none";
 
+            }else if(actionValue == "user_joined"){
+                document.getElementById("user_list").style.display = "block"
+                addUser(dataObject.name, dataObject.email, `{{ asset('cdn/img/360_F_553796090_XHrE6R9jwmBJUMo9HKl41hyHJ5gqt9oz.jpg') }}`);
 
+<<<<<<< HEAD
 
 
     </div>
@@ -70,100 +161,99 @@ document.getElementById('createRoomBtn').addEventListener('click', function() {
 
 
                 axios.post('/schedule-close-websocket', { code: genRoomCode, timeLeft: 15 })
+=======
+                axios.post('/join-room', { name: dataObject.name, email: dataObject.email, code: roomCrafted})
+>>>>>>> dd7d51533c572b6cbd569f0c979660e4eb9912d5
                 .then(function(response) {
-                    console.log('Close WebSocket job scheduled:', response.data);
+                    console.log('joined room x');
                 })
                 .catch(function(error) {
-                    console.error('Error scheduling close WebSocket job:', error);
+                    console.error('error room x joined');
                 });
+            }
+        };
+
+        socket.onerror = function(error) {
+            console.error('WebSocket error: ', error);
+        };
+
+        socket.onclose = function(event) {
+            console.log('WebSocket connection closed', event);
+        };
+    });
+
+    function addUser(name, email, avatarSrc) {
+        const userDiv = document.createElement('div');
+        userDiv.className = 'col-md-6 d-flex justify-content-center align-items-center';
+
+        const userImage = document.createElement('img');
+        userImage.src = avatarSrc;
+        userImage.id = 'user-logo';
+        userImage.alt = 'User avatar';
+        userImage.style.height = '20px';
+        userImage.style.width = '20px';
+        userImage.style.marginRight = '10px';
+
+        const userInfoDiv = document.createElement('div');
+        userInfoDiv.className = 'user-info';
+
+        const userName = document.createElement('h4');
+        userName.textContent = name;
+        userInfoDiv.appendChild(userName);
 
 
-                axios.post('/create-room', { code: genRoomCode, id: '{{ Auth::user()->id }}' })
-                .then(function(response) {
-                    console.log('created room x');
-                })
-                .catch(function(error) {
-                    console.error('error room x');
-                });
+        const userEmail = document.createElement('p');
+        userEmail.textContent = email;
+        userInfoDiv.appendChild(userEmail);
 
+        userDiv.appendChild(userImage);
+        userDiv.appendChild(userInfoDiv);
 
-                startTimer();
-                document.getElementById("timer").style.display = "grid";
-                document.getElementById("room-code-txt").style.display = "block";
-                document.getElementById('createRoomBtn').style.display = "none";
-                document.getElementById("roomkey").innerHTML = genRoomCode;
-                generateQR(genRoomCode);
-        }else if(actionValue == "user_joined"){
-            document.getElementById("user_list").style.display = "block"
-            addUser(dataObject.name, dataObject.email, `{{ asset('cdn/img/360_F_553796090_XHrE6R9jwmBJUMo9HKl41hyHJ5gqt9oz.jpg') }}`);
-        }
-    };
+        document.getElementById('joined_users').appendChild(userDiv);
+    }
 
-    socket.onerror = function(error) {
-        console.error('WebSocket error: ', error);
-    };
+    function createMessage(socket) {
+            var selectElement = document.getElementById('your_select_id');
+            var selectedOption = selectElement.options[selectElement.selectedIndex];
+            var selectedLocation = selectedOption.value;
+            dataId = selectedOption.getAttribute('data-id');
+            let parsedLocation = JSON.parse(selectedLocation);
 
-    socket.onclose = function(event) {
-        console.log('WebSocket connection closed', event);
-    };
-});
+            console.log(dataId);
 
-function addUser(name, email, avatarSrc) {
-    const userDiv = document.createElement('div');
-    userDiv.className = 'col-md-6 d-flex justify-content-center align-items-center';
+            var sliderElement = document.getElementById('slider');
+            var diameterValue = sliderElement.value;
 
-    const userImage = document.createElement('img');
-    userImage.src = avatarSrc;
-    userImage.id = 'user-logo';
-    userImage.alt = 'User avatar';
-    userImage.style.height = '20px';
-    userImage.style.width = '20px';
-    userImage.style.marginRight = '10px';
+            console.log(selectedLocation);
 
-    const userInfoDiv = document.createElement('div');
-    userInfoDiv.className = 'user-info';
+        const message = {
+            "action": "create",
+            "name": "{{ Auth::user()->name }}",
+            "email": "{{ Auth::user()->email }}",
+            "location": parsedLocation,
+            "diameter": diameterValue
+        };
 
-    const userName = document.createElement('h4');
-    userName.textContent = name;
-    userInfoDiv.appendChild(userName);
+        console.log(JSON.stringify(message));
 
-
-    const userEmail = document.createElement('p');
-    userEmail.textContent = email;
-    userInfoDiv.appendChild(userEmail);
-
-    userDiv.appendChild(userImage);
-    userDiv.appendChild(userInfoDiv);
-
-    document.getElementById('joined_users').appendChild(userDiv);
-}
-
-// Example usage
-function createMessage(socket) {
-    const message = {
-        "action": "create",
-        "name": "Miha Donko",
-        "email": "YOUR_EMAIL@example.com",
-        "location": {
-            "coords": {
-                "accuracy": 100,
-                "longitude": 15.1573861,
-                "altitude": 468.1999816894531,
-                "heading": 0,
-                "latitude": 46.5909305,
-                "altitudeAccuracy": 100,
-                "speed": 0
-            },
-            "mocked": false,
-            "timestamp": 1716478829145
-        },
-        "diameter": 100
-    };
-
-    socket.send(JSON.stringify(message));
-}
+        socket.send(JSON.stringify(message));
+    }
 </script>
 <script>
+        function updateJobTimer(newTime){
+            //TODO implement job timer update
+            console.log("new timer" + newTime);
+            console.log("room code" + roomCrafted);
+            axios.post('/update-close-websocket', { timeLeft: newTime, code: roomCrafted })
+            .then(function(response) {
+                console.log('Close WebSocket job scheduled:', response.data);
+            })
+            .catch(function(error) {
+                console.error('Error scheduling close WebSocket job:', error);
+            });
+        }
+
+
         let timer;
         let totalTime;
         let timeLeft;
@@ -213,9 +303,11 @@ function createMessage(socket) {
                 alert("Timer has already finished.");
                 return;
             }
-            totalTime += 5 * 60; // Add 5 minutes to the total time
-            timeLeft += 5 * 60;  // Add 5 minutes to the remaining time
+            totalTime += 5 * 60;
+            timeLeft += 5 * 60; 
             updateTimerText(timeLeft);
+
+            updateJobTimer(timeLeft);
 
             const foregroundCircle = document.getElementById('foregroundCircle');
             foregroundCircle.style.transition = 'none';
