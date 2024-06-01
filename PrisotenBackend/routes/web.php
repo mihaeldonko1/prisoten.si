@@ -11,6 +11,7 @@ Route::get('/', function () {
 Route::post('/schedule-close-websocket', [RoomController::class, 'scheduleCloseWebSocket']);
 
 Route::post('/create-room', [RoomController::class, 'create']);
+Route::post('/edit-room', [RoomController::class, 'edit']);
 
 Route::get('/dashboard', function () {
     return view('dashboard');

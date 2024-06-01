@@ -45,6 +45,25 @@ class RoomController extends Controller
     
         return response()->json(['roomCode' => $code, 'message' => 'Room created successfully']);
     }
+
+    public function edit(Request $request)
+    {
+        $roomCode = $request->input('code');
+
+        // Check if the room exists
+        $room = DB::table('rooms')->where('code', $roomCode)->first();
+
+        if ($room) {
+            // Update the updated_at parameter
+            DB::table('rooms')
+                ->where('code', $roomCode)
+                ->update(['updated_at' => Carbon::now()]);
+
+            return response()->json(['message' => 'Room updated successfully']);
+        } else {
+            return response()->json(['message' => 'Room not found'], 404);
+        }
+    }
     
 
     public function join(Request $request)

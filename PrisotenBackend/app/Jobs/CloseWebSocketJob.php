@@ -37,8 +37,13 @@ class CloseWebSocketJob implements ShouldQueue
         // Fetch the room from the rooms table
         $room = DB::table('rooms')->where('code', $this->roomCode)->first();
 
+
+        /// TODO UPATE JOB CHECK FOR TIMING
+
+
         if ($room) {
-            // Insert the room into the archive table
+            if ($this->created_at==$this->updated_at){
+                            // Insert the room into the archive table
             DB::table('archive')->insert([
                 'user_id' => $room->user_id,
                 'code' => $room->code,
@@ -56,7 +61,16 @@ class CloseWebSocketJob implements ShouldQueue
             // Log the action
             echo "Closed websocket and moved room code: {$this->roomCode} to archive" . PHP_EOL;
         } else {
-            echo "Room code: {$this->roomCode} not found" . PHP_EOL;
+            DB::table('rooms')
+            ->where('code', $roomCode)
+            ->update(['updated_at' => $room->created_at]);
+            echo "Room code: {$this->roomCode} (job scheduled at later time)" . PHP_EOL;
         }
+    }
+            else {
+                echo "Room code: {$this->roomCode} not found" . PHP_EOL;
+                
+            }
+
     }
 }

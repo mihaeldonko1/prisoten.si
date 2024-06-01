@@ -54,7 +54,7 @@ function generateQR(code){
 }
 
 document.getElementById('createRoomBtn').addEventListener('click', function() {
-    const socket = new WebSocket('wss://localhost:8080');
+    const socket = new WebSocket('ws://localhost:8080');
 
     socket.onopen = function() {
         console.log('WebSocket connection established');
@@ -66,7 +66,7 @@ document.getElementById('createRoomBtn').addEventListener('click', function() {
         const actionValue = dataObject.action;
         console.log(dataObject);
         if(actionValue == "created"){
-                let genRoomCode = dataObject.roomCode;
+                var genRoomCode = dataObject.roomCode;
 
 
                 axios.post('/schedule-close-websocket', { code: genRoomCode, timeLeft: 15 })
@@ -227,12 +227,27 @@ function createMessage(socket) {
                     foregroundCircle.style.strokeDashoffset = circleLength * (timeLeft / totalTime);
                 });
             });
+            console.log(genRoomCode);
+            axios.post('/edit-room', { code: genRoomCode, id: '{{ Auth::user()->id }}' })
+                .then(function(response) {
+                    console.log('created room x');
+                })
+            axios.post('/schedule-close-websocket', { code: genRoomCode, timeLeft: 15 })
+            .then(function(response) {
+                console.log('Close WebSocket job scheduled:', response.data);
+            })
+            .catch(function(error) {
+                console.error('Error scheduling close WebSocket job:', error);
+            });
         }
 
         function updateTimerText(time) {
             const minutes = Math.floor(time / 60);
             const seconds = time % 60;
             document.getElementById('timerText').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            /// TODO TIMER SPREMENI CARBON DATABASE
+
+
         }
     </script>
 </x-app-layout>
