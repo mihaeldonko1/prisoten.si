@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, Image, Animated } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import Styles from './Styles';
@@ -13,38 +13,12 @@ function Session_biometric_location() {
     const userObj = JSON.parse(user);
     const codeData = JSON.parse(data);
 
-    ws = new WebSocket('ws://86.58.51.113:8080');
-
-    ws.onopen = () => {
-    console.log('WebSocket connection opened');
-    };
-
-    ws.onmessage = (e) => {
-    const response = JSON.parse(e.data);
-    console.log('Received response:', response);
-
-    if (response.action === 'joined') {
-        router.push({
-             pathname: '/moduls/Session_attendance',
-        });
-    } else {
-        console.error('Room does not exist or invalid response');
-    }
-    };
-
-    ws.onerror = (e) => {
-    console.error('WebSocket error:', e.message);
-    };
-
-    ws.onclose = (e) => {
-    console.log('WebSocket connection closed:', e.code, e.reason);
-    };
-    
+    //Images
     const imageSourceFingerprint = require('../../assets/fingerprint.png');
     const imageSourceLocation = require('../../assets/location.png');
-    
+
     //States for check-ups
-    const [biometricsState, setbiometricsState] = useState(true);
+    const [biometricsState, setbiometricsState] = useState(false);
     const [locationState, setlocationState] = useState(false);
 
     //States for button colors
@@ -56,13 +30,91 @@ function Session_biometric_location() {
     const [location, setLocation] = useState(null);
     const [biometricData, setBiometricData] = useState(null);
 
+    //WebSocket
+    const ws = useRef(null)
+    const [wsState, setWsState] = useState(false)
+
+    useEffect(() => {
+        if (!wsState) {
+            webSocketStarter()
+            setWsState(true)
+        }
+    }, []);
+
+
+    const webSocketStarter = () => {
+        ws.current = new WebSocket('ws://194.152.25.94:8080');
+        console.log('------ WebSocket useEffect -----');
+
+        ws.current.onopen = () => {
+            console.log('WebSocket connection opened');
+        };
+
+        ws.current.onerror = (e) => {
+            console.error('WebSocket error:', e.message);
+        };
+    }
+    const webSocketCloser = () => {
+        if (ws.current) {
+            ws.current.close();
+
+            ws.current.onclose = (e) => {
+                console.log('WebSocket connection closed:', e.code, e.reason);
+            };
+        }
+    }
+
+
+
+    const sendWebSocketMessage = async () => {
+        if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+            const oseba = new WebSocketObject('join', codeData, userObj.name, userObj.email, biometricData, location);
+            console.log(JSON.stringify(oseba));
+            const response = await sendWebSocketRequest(JSON.stringify(oseba));
+            handleWebSocketResponse(response);
+        } else {
+            console.log('WebSocket is not open. Retrying...');
+            setTimeout(sendWebSocketMessage, 1000);  // Retry after 1 second
+        }
+    };
+
+    const sendWebSocketRequest = (message) => {
+        return new Promise((resolve, reject) => {
+            ws.current.onmessage = (e) => {
+                let response = JSON.parse(e.data);
+                console.log('Resolve: ', response);
+                resolve(response);
+            };
+            ws.current.onerror = (e) => {
+                reject(new Error('WebSocket error'));
+            };
+            ws.current.send(message);
+        });
+    };
+
+    const handleWebSocketResponse = (response) => {
+        console.log('Received response:', response);
+
+        if (response.action === 'joined') {
+            webSocketCloser()
+            router.push({
+                pathname: '/moduls/Session_attendance',
+            });
+        } else {
+            console.error('Room does not exist or invalid response');
+        }
+    };
+    //das
+
+
+
     //Biometrija
     let bio = false
     const handleFingreprintPress = async () => {
         console.log('Fingerprint pressed!');
         bio = await Biometrics()
         setBiometricData(bio)
-        console.log(`bio state: ${bio}`);
+        //console.log(`bio state: ${bio}`);
 
     };
 
@@ -70,9 +122,9 @@ function Session_biometric_location() {
 
     useEffect(() => {
         if (biometricData) {
-            console.log(`biostate data: ${JSON.stringify(biometricData)}`);
+            //console.log(`biostate data: ${JSON.stringify(biometricData)}`);
             setbiometricsState(true) //Ta del kode povzroči reroute
-            console.log(`Podatki: ${userObj.email}, Code data: ${codeData}`);
+            // console.log(`Podatki: ${userObj.email}, Code data: ${codeData}`);
         }
     }, [biometricData]);
 
@@ -83,30 +135,27 @@ function Session_biometric_location() {
         console.log('Location pressed!');
         const loc = await getLocation();
         if (loc) {
-            console.log(`Location received: ${JSON.stringify(loc)}`);
+            //console.log(`Location received: ${JSON.stringify(loc)}`);
             setLocation(loc);
-        } 
+        }
     };
 
     // Lokacija state
     useEffect(() => {
         if (location) {
-            console.log(`location data: ${JSON.stringify(location)}`);
+            //console.log(`location data: ${JSON.stringify(location)}`);
             setlocationState(true);   //Ta del kode povzroči reroute
         }
     }, [location]);
 
 
-    //Preverjanje in ustvarjanje 
+
+    // Redirect
     useEffect(() => {
         if (biometricsState && locationState) {
-            const oseba = new WebSocketObject('join', codeData, userObj.name, userObj.email, biometricData, location)
-            console.log(JSON.stringify(oseba));
-            ws.send(JSON.stringify(oseba))
+            sendWebSocketMessage();
         }
     }, [biometricsState, locationState]);
-
-
 
 
 
