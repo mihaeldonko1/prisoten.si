@@ -54,6 +54,8 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
+    'socket_url' => env('WEBSOCKET_URL', 'ws://localhost:8080'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

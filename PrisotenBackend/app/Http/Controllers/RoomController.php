@@ -46,6 +46,8 @@ class RoomController extends Controller
         $email = $request->input('email');
         $name = $request->input('name');
         $code = $request->input('code');
+
+        Log::info("joined the room");
     
         $existingUcenec = DB::table('ucenci')->where('email', $email)->first();
     

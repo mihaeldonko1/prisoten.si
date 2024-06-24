@@ -45,7 +45,7 @@
     
 
 <script>
-
+const socketUrl = @json(config('app.socket_url'));
 function generateQR(code){
     QRCode.toCanvas(document.getElementById('qrcode'), code, { errorCorrectionLevel: 'H' }, function (error) {
             if (error) console.error(error);
@@ -54,7 +54,10 @@ function generateQR(code){
 }
 
 document.getElementById('createRoomBtn').addEventListener('click', function() {
-    const socket = new WebSocket('ws://localhost:8080');
+    
+    console.log(socketUrl);
+    const socket = new WebSocket(socketUrl);
+
 
     socket.onopen = function() {
         console.log('WebSocket connection established');
