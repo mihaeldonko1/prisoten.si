@@ -60,6 +60,7 @@
 
 
 <script>
+    const socketUrl = @json(config('app.socket_url'));
     var dataId = null;
     var roomCrafted = null;
 
@@ -83,7 +84,7 @@
     });
 
     document.getElementById('createRoomBtn').addEventListener('click', function() {
-        const socket = new WebSocket('ws://86.58.51.113:8080');
+        const socket = new WebSocket(socketUrl);
 
         socket.onopen = function() {
             console.log('WebSocket connection established');
@@ -126,6 +127,7 @@
                     document.getElementById('setupSettings').style.display = "none";
 
             }else if(actionValue == "user_joined"){
+                console.log("joined user");
                 document.getElementById("user_list").style.display = "block"
                 addUser(dataObject.name, dataObject.email, `{{ asset('cdn/img/360_F_553796090_XHrE6R9jwmBJUMo9HKl41hyHJ5gqt9oz.jpg') }}`);
 
