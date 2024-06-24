@@ -143,7 +143,7 @@ function Session_biometric_location() {
     // Lokacija state
     useEffect(() => {
         if (location) {
-            //console.log(`location data: ${JSON.stringify(location)}`);
+            console.log(`location data: ${JSON.stringify(location)}`);
             setlocationState(true);   //Ta del kode povzroči reroute
         }
     }, [location]);

@@ -30,7 +30,6 @@ function Session_join() {
     ws.onmessage = (e) => {
       const response = JSON.parse(e.data);
       console.log('Received response:', response);
-
       if (response.action === 'room_exists' && response.exists) {
         ws.close();
         console.log('WebSocket connection manually closed');
@@ -42,7 +41,8 @@ function Session_join() {
           },
         });
       } else {
-        console.error('Room does not exist or invalid response');
+        //UI fix needed - 
+        alert('Soba ne obstaja');
       }
     };
 
