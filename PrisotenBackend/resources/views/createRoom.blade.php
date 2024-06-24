@@ -45,6 +45,28 @@
     
 
 <script>
+    const socketUrl = @json(config('app.socket_url'));
+    var dataId = null;
+    var roomCrafted = null;
+
+    function updateValue(value) {
+        document.getElementById('sliderValue').textContent = value;
+    }
+
+    function generateQR(code){
+        QRCode.toCanvas(document.getElementById('qrcode'), code, { errorCorrectionLevel: 'H' }, function (error) {
+                if (error) console.error(error);
+                console.log('QR code generated successfully!');
+            });
+    }
+
+    document.getElementById('close-room-modal').addEventListener('click', function() { 
+        document.getElementById('setupSettings').style.display = "none";
+    });
+
+    document.getElementById('openCreateRoomModal').addEventListener('click', function() { 
+        document.getElementById('setupSettings').style.display = "block";
+    });
 const socketUrl = @json(config('app.socket_url'));
 function generateQR(code){
     QRCode.toCanvas(document.getElementById('qrcode'), code, { errorCorrectionLevel: 'H' }, function (error) {
@@ -53,6 +75,8 @@ function generateQR(code){
         });
 }
 
+    document.getElementById('createRoomBtn').addEventListener('click', function() {
+        const socket = new WebSocket(socketUrl);
 document.getElementById('createRoomBtn').addEventListener('click', function() {
     
     console.log(socketUrl);
@@ -90,6 +114,28 @@ document.getElementById('createRoomBtn').addEventListener('click', function() {
                 });
 
 
+                    startTimer();
+                    document.getElementById("timer").style.display = "grid";
+                    document.getElementById("room-code-txt").style.display = "block";
+                    document.getElementById('openCreateRoomModal').style.display = "none";
+                    document.getElementById("roomkey").innerHTML = genRoomCode;
+                    generateQR(genRoomCode);
+                    document.getElementById('setupSettings').style.display = "none";
+
+            }else if(actionValue == "user_joined"){
+                console.log("joined user");
+                document.getElementById("user_list").style.display = "block"
+                addUser(dataObject.name, dataObject.email, `{{ asset('cdn/img/360_F_553796090_XHrE6R9jwmBJUMo9HKl41hyHJ5gqt9oz.jpg') }}`);
+
+                axios.post('/join-room', { name: dataObject.name, email: dataObject.email, code: roomCrafted})
+                .then(function(response) {
+                    console.log('joined room x');
+                })
+                .catch(function(error) {
+                    console.error('error room x joined');
+                });
+            }
+        };
                 startTimer();
                 document.getElementById("timer").style.display = "grid";
                 document.getElementById("room-code-txt").style.display = "block";
