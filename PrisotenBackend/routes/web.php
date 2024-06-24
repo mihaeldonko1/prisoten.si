@@ -12,11 +12,8 @@ Route::post('/schedule-close-websocket', [RoomController::class, 'scheduleCloseW
 Route::post('/update-close-websocket', [RoomController::class, 'updateScheduleCloseWebSocket']);
 
 Route::post('/create-room', [RoomController::class, 'create']);
-<<<<<<< HEAD
 Route::post('/edit-room', [RoomController::class, 'edit']);
-=======
 Route::post('/join-room', [RoomController::class, 'join']);
->>>>>>> dd7d51533c572b6cbd569f0c979660e4eb9912d5
 
 Route::get('/dashboard', function () {
     return view('dashboard');
