@@ -10,6 +10,7 @@ use App\Jobs\CloseWebSocketJob;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use ReflectionClass;
 
 class RoomController extends Controller
 {
@@ -99,12 +100,97 @@ class RoomController extends Controller
         }
     }
 
-    public function updateScheduleCloseWebSocket(Request $request){
-        //TODO implementaj da se payload update z novim timemom ki ga dobis znotraj requesta
+
+
+
+    public function updateScheduleCloseWebSocket(Request $request)
+    {
         $roomCode = $request->input('code');
         $timeLeft = $request->input('timeLeft');
-        //ti parametri so že delujoči
+        
+        // Store the result of checkRoomCode in a variable
+        $isRoomCodeValid = $this->checkRoomCode($roomCode);
+        if ($isRoomCodeValid) {
+            $this->withParamsScheduleCloseWebSocket($roomCode, $timeLeft);
+        }
+        // Log the result
+        //Log::info($roomCode);
+        //Log::info('Check Room Code Result:', ['isRoomCodeValid' => $isRoomCodeValid]);
     }
+
+
+    public function checkRoomCode($roomCode)
+    {
+        // Query all jobs from the jobs table
+        $jobs = DB::table('jobs')->get();
+
+        foreach ($jobs as $job) {
+            // Decode the payload JSON
+            $payload = json_decode($job->payload, true);
+
+            // Log the payload
+            Log::info('Payload:', $payload);
+
+            // Extract the command from the decoded payload
+            if (isset($payload['data']['command'])) {
+                $serializedCommand = $payload['data']['command'];
+
+                // Log the serialized command string
+                Log::info('Serialized Command:', [$serializedCommand]);
+
+                // Unserialize the command
+                $command = unserialize($serializedCommand);
+
+                // Log the unserialized command object
+                Log::info('Unserialized Command:', [$command]);
+
+                // Use reflection to access the private/protected property 'roomCode'
+                $reflection = new ReflectionClass($command);
+
+                // Log the reflection object
+                Log::info('Reflection:', [$reflection]);
+
+                if ($reflection->hasProperty('roomCode')) {
+                    $property = $reflection->getProperty('roomCode');
+
+                    // Log the property object
+                    Log::info('Property:', [$property]);
+
+                    $property->setAccessible(true);
+                    $commandRoomCode = $property->getValue($command);
+
+                    // Log the value of roomCode
+                    Log::info('Command RoomCode:', [$commandRoomCode]);
+
+                    // Compare roomCode values
+                    if ($commandRoomCode === $roomCode) {
+                        // Delete the job from the jobs table
+                        DB::table('jobs')->where('id', $job->id)->delete();
+
+                        // Log the deletion
+                        Log::info('Deleted job with id:', [$job->id]);
+
+                        return true;
+                    }
+                } else {
+                    // Log if the property is not found
+                    Log::info('Property roomCode not found in command');
+                }
+            } else {
+                // Log if command is not found in payload
+                Log::info('Command not found in payload');
+            }
+        }
+
+        // Log if no job matches the roomCode
+        Log::info('No matching roomCode found in any job');
+
+        return false;
+    }
+
+
+
+
 
 
     public function scheduleCloseWebSocket(Request $request)
@@ -113,6 +199,19 @@ class RoomController extends Controller
         $timeLeft = $request->input('timeLeft');
 
         // Dispatch the job to close the websocket after $timeLeft seconds
+        Log::info($timeLeft);
+        CloseWebSocketJob::dispatch($roomCode)->delay(now()->addSeconds($timeLeft));
+        //Log::info($roomCode);
+
+        return response()->json(['status' => 'Job scheduled', 'roomCode' => $roomCode, 'timeLeft' => $timeLeft]);
+    }
+
+    public function withParamsScheduleCloseWebSocket($givenCode, $givenTime)
+    {
+        $roomCode = $givenCode;
+        $timeLeft = $givenTime;
+        // Dispatch the job to close the websocket after $timeLeft seconds
+        Log::info($timeLeft);
         CloseWebSocketJob::dispatch($roomCode)->delay(now()->addSeconds($timeLeft));
         //Log::info($roomCode);
 

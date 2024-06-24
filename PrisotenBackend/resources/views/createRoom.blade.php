@@ -99,7 +99,16 @@
                     let genRoomCode = dataObject.roomCode;
                     roomCrafted = genRoomCode;
 
-                    axios.post('/schedule-close-websocket', { code: genRoomCode, timeLeft: 15 })
+                    startTimer();
+                    document.getElementById("timer").style.display = "grid";
+                    document.getElementById("room-code-txt").style.display = "block";
+                    document.getElementById('openCreateRoomModal').style.display = "none";
+                    document.getElementById("roomkey").innerHTML = genRoomCode;
+                    generateQR(genRoomCode);
+                    document.getElementById('setupSettings').style.display = "none";
+
+
+                    axios.post('/schedule-close-websocket', { code: genRoomCode, timeLeft: timeLeft})
                     .then(function(response) {
                         console.log('Close WebSocket job scheduled:', response.data);
                     })
@@ -116,14 +125,6 @@
                         console.error('error room x');
                     });
 
-
-                    startTimer();
-                    document.getElementById("timer").style.display = "grid";
-                    document.getElementById("room-code-txt").style.display = "block";
-                    document.getElementById('openCreateRoomModal').style.display = "none";
-                    document.getElementById("roomkey").innerHTML = genRoomCode;
-                    generateQR(genRoomCode);
-                    document.getElementById('setupSettings').style.display = "none";
 
             }else if(actionValue == "user_joined"){
                 console.log("joined user");
