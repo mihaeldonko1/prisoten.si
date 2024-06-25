@@ -4,6 +4,7 @@ import * as WebBrowser from 'expo-web-browser';
 import * as AuthSession from "expo-auth-session";
 import { router } from 'expo-router';
 import Styles from './Styles';
+import { Button, Text, VStack } from 'native-base';
 
 const tenetID = "a4d626db-4464-4084-a8cc-552ef72031b9";
 const clientID = "f6f28b05-e13c-40ee-bcd8-dcb8631650b7";
@@ -83,21 +84,19 @@ export default function OfficeSignIn() {
 
     return (
         <View style={Styles.container}>
-            {
-                authRequest && discovery ? (
-                    <>
-                        <Button
-                            title="Prijava z študentsko identiteto"
-                            accessibilityLabel="Prijava z študentsko identiteto"
-                            onPress={async () => {
-                                const result = await authRequest.promptAsync(discovery);
-                                setAuthorizeResult(result);
-                            }}
-                        />
-                        {errorMessage ? <Text style={Styles.errorText}>{errorMessage}</Text> : null}
-                    </>
-                ) : null
-            }
-        </View>
+        {authRequest && discovery ? (
+            <VStack space={4} alignItems="center">
+                <Button
+                    onPress={async () => {
+                        const result = await authRequest.promptAsync(discovery);
+                        setAuthorizeResult(result);
+                    }}
+                >
+                    Prijava z študentsko identiteto
+                </Button>
+                {errorMessage ? <Text style={Styles.errorText}>{errorMessage}</Text> : null}
+            </VStack>
+        ) : null}
+    </View>
     );
 }
