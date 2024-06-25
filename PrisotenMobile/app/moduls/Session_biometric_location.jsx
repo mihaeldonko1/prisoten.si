@@ -44,10 +44,10 @@ function Session_biometric_location() {
 
     const webSocketStarter = () => {
         ws.current = new WebSocket('ws://194.152.25.94:8080');
-        console.log('------ WebSocket useEffect -----');
+        //console.log('------ WebSocket useEffect -----');
 
         ws.current.onopen = () => {
-            console.log('WebSocket connection opened');
+            //console.log('WebSocket connection opened');
         };
 
         ws.current.onerror = (e) => {
@@ -69,7 +69,7 @@ function Session_biometric_location() {
     const sendWebSocketMessage = async () => {
         if (ws.current && ws.current.readyState === WebSocket.OPEN) {
             const oseba = new WebSocketObject('join', codeData, userObj.name, userObj.email, biometricData, location);
-            console.log(JSON.stringify(oseba));
+            //console.log(JSON.stringify(oseba));
             const response = await sendWebSocketRequest(JSON.stringify(oseba));
             handleWebSocketResponse(response);
         } else {
@@ -96,7 +96,7 @@ function Session_biometric_location() {
         console.log('Received response:', response);
 
         if (response.action === 'joined') {
-            webSocketCloser()
+            webSocketCloser();
             router.push({
                 pathname: '/moduls/Session_attendance',
             });
@@ -112,8 +112,8 @@ function Session_biometric_location() {
     let bio = false
     const handleFingreprintPress = async () => {
         console.log('Fingerprint pressed!');
-        bio = await Biometrics()
-        setBiometricData(bio)
+        bio = await Biometrics();
+        setBiometricData(bio);
         //console.log(`bio state: ${bio}`);
 
     };
@@ -123,7 +123,7 @@ function Session_biometric_location() {
     useEffect(() => {
         if (biometricData) {
             //console.log(`biostate data: ${JSON.stringify(biometricData)}`);
-            setbiometricsState(true) //Ta del kode povzroči reroute
+            setbiometricsState(true); //Ta del kode povzroči reroute
             // console.log(`Podatki: ${userObj.email}, Code data: ${codeData}`);
         }
     }, [biometricData]);

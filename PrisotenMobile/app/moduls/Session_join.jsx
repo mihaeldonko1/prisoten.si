@@ -19,7 +19,7 @@ function Session_join() {
     const ws = new WebSocket('ws://194.152.25.94:8080');
 
     ws.onopen = () => {
-      console.log('WebSocket connection opened');
+      //console.log('WebSocket connection opened');
       const message = {
         action: 'room_exists',
         roomCode: inputValue,
@@ -29,10 +29,10 @@ function Session_join() {
 
     ws.onmessage = (e) => {
       const response = JSON.parse(e.data);
-      console.log('Received response:', response);
+      //console.log('Received response:', response);
       if (response.action === 'room_exists' && response.exists) {
         ws.close();
-        console.log('WebSocket connection manually closed');
+        //console.log('WebSocket connection manually closed');
         router.push({
           pathname: '/moduls/Session_biometric_location',
           params: {
