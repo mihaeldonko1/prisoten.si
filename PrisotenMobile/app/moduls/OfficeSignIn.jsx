@@ -1,9 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { View, Button, Text } from 'react-native';
+import { View, Button as RNButton, Text as RNText, StyleSheet } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import * as AuthSession from "expo-auth-session";
 import { router } from 'expo-router';
 import Styles from './Styles';
+
+import { PaperProvider } from 'react-native-paper';
+import { Button, Text } from 'react-native-paper';
+
 
 const tenetID = "a4d626db-4464-4084-a8cc-552ef72031b9";
 const clientID = "f6f28b05-e13c-40ee-bcd8-dcb8631650b7";
@@ -15,6 +19,20 @@ export default function OfficeSignIn() {
     const [authRequest, setAuthRequest] = useState({});
     const [authorizeResult, setAuthorizeResult] = useState({});
     const [errorMessage, setErrorMessage] = useState('');
+
+    //UI 
+    const [loadingRing, setLoadingRing] = useState(false)
+
+    useEffect(() => {
+        if (loadingRing) {
+            const timer = setTimeout(() => {
+                setLoadingRing(false);
+            }, 2000);
+
+            return () => clearTimeout(timer);
+
+        }
+    }, [loadingRing])
 
     const scopes = ['openid', 'profile', 'email', 'offline_access'];
     const domain = `https://login.microsoftonline.com/${tenetID}/v2.0`;
@@ -82,22 +100,42 @@ export default function OfficeSignIn() {
     }, [authorizeResult, authRequest]);
 
     return (
-        <View style={Styles.container}>
-            {
-                authRequest && discovery ? (
-                    <>
-                        <Button
-                            title="Prijava z študentsko identiteto"
-                            accessibilityLabel="Prijava z študentsko identiteto"
-                            onPress={async () => {
-                                const result = await authRequest.promptAsync(discovery);
-                                setAuthorizeResult(result);
-                            }}
-                        />
-                        {errorMessage ? <Text style={Styles.errorText}>{errorMessage}</Text> : null}
-                    </>
-                ) : null
-            }
-        </View>
+        <View style={Styles.containerPaper}>
+        {
+            authRequest && discovery ? (
+                <>
+                    <Button
+                        mode="contained"
+                        loading={loadingRing}
+                        onPress={async () => {
+                            setLoadingRing(true)
+                            const result = await authRequest.promptAsync(discovery);
+                            setAuthorizeResult(result);
+                        }}
+                        style={styles.button}
+                        labelStyle={styles.buttonFontStyle}
+                    >
+                        Prijava z študentsko identiteto
+                    </Button>
+                    {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+                </>
+            ) : null
+        }
+    </View>
     );
 }
+
+const styles = StyleSheet.create({
+    button: {
+        marginTop: 0,
+        backgroundColor: '#10CEED',
+        borderRadius: 8
+    },
+    errorText: {
+        color: 'red',
+        marginTop: 10,
+    },
+    buttonFontStyle: {
+        fontFamily: 'Roboto',
+    },
+});

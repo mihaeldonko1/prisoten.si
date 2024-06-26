@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, Button } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { router } from 'expo-router';
-
+import Header from './Appbar';
 
 import Styles from './Styles';
 
@@ -69,6 +69,7 @@ function Session_join() {
 
   return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      
       <Text style={Styles.margin_vertical}>Dobrodošli, {userObj.name}</Text>
       <TextInput
         style={{ height: 40, borderColor: 'gray', borderWidth: 1, marginTop: 20, width: 200, paddingHorizontal: 10 }}

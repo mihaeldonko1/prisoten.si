@@ -1,6 +1,16 @@
 import { StyleSheet } from 'react-native';
 
 export default StyleSheet.create({
+  containerPaper: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: '#F5F5F5'
+},
+
+
+
   container: {
     justifyContent: 'center',
     alignItems: 'center',
@@ -51,6 +61,7 @@ export default StyleSheet.create({
   mainContainer: {
     flex: 1,
     height: '10%',
+    backgroundColor: '#F5F5F5'
   },
   cameraContainer: {
     flex: 1,
