@@ -25,7 +25,7 @@
         "android.permission.RECORD_AUDIO"
       ],
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon-splash.png",
+        "foregroundImage": "./assets/adaptive-icon-custom.png",
         "backgroundColor": "#ffffff"
       },
       "package": "com.anonymous.prisotenOnline"
