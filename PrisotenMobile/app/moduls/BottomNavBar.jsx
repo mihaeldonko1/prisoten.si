@@ -1,13 +1,12 @@
 import * as React from 'react';
 import { StyleSheet } from 'react-native';
-import { Appbar, FAB, useTheme } from 'react-native-paper';
+import { Appbar, useTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const BOTTOM_APPBAR_HEIGHT = 64;
 
-const MyComponent = () => {
+const Footer = () => {
   const { bottom } = useSafeAreaInsets();
-  const theme = useTheme();
 
   return (
     <Appbar
@@ -35,4 +34,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default MyComponent;
+export default Footer;

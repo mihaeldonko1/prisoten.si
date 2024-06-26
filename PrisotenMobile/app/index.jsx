@@ -4,14 +4,14 @@ import OfficeSignIn from './moduls/OfficeSignIn';
 import Styles from './moduls/Styles';
 import { PaperProvider } from 'react-native-paper';
 import Header from './moduls/Appbar';
-import MyComponent from './moduls/BottomNavBar';
+import Footer from './moduls/BottomNavBar';
 
 export default function App() {
   return (
     <PaperProvider>
       <Header />
       <OfficeSignIn />
-      <MyComponent />
+      <Footer />
     </PaperProvider>
   );
 }

@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button } from 'react-native';
+import { View, Text, TextInput, Button as RNButton, StyleSheet } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { router } from 'expo-router';
+
+import { Button, PaperProvider } from 'react-native-paper';
 import Header from './Appbar';
+import Footer from './BottomNavBar';
 
 import Styles from './Styles';
 
@@ -10,7 +13,7 @@ function Session_join() {
   const { user, tokens } = useLocalSearchParams();
   const tokensObj = JSON.parse(tokens);
   const userObj = JSON.parse(user);
-  
+
   const [inputValue, setInputValue] = useState('');
 
 
@@ -68,27 +71,60 @@ function Session_join() {
   };
 
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      
-      <Text style={Styles.margin_vertical}>Dobrodošli, {userObj.name}</Text>
-      <TextInput
-        style={{ height: 40, borderColor: 'gray', borderWidth: 1, marginTop: 20, width: 200, paddingHorizontal: 10 }}
-        onChangeText={setInputValue}
-        value={inputValue}
-        placeholder="Vnesite kodo za prisotnost"
-      />
-      <Button
-        title="Potrdi"
-        onPress={handleJoinClick}
-        style={Styles.margin_vertical}
-      />
-      <Button
-        title="QR KODA"
-        onPress={handleBarcodeSubpageClick}
-        style={Styles.margin_vertical}
-      />
-    </View>
+    <PaperProvider>
+      <Header />
+      <View style={Styles.containerPaper}>
+        <Text style={styles.fontText}
+
+        >Dobrodošli, {userObj.name}</Text>
+        <TextInput
+          style={styles.inputField}
+          onChangeText={setInputValue}
+          value={inputValue}
+          placeholder="Vnesite kodo za prisotnost"
+        />
+        <Button
+          mode="contained"
+          onPress={handleJoinClick}
+          style={[styles.buttonStyle]} // Adjust width as needed
+        >
+          Potrdi
+        </Button>
+        <Button
+          mode="contained"
+          onPress={handleBarcodeSubpageClick}
+          style={[styles.buttonStyle]} // Adjust width as needed
+        >
+          QR KODA
+        </Button>
+      </View>
+      <Footer />
+    </PaperProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  inputField: {
+    height: 40,
+    borderColor: 'gray',
+    borderWidth: 1,
+    marginTop: 10,
+    width: 200,
+    paddingHorizontal: 10,
+    marginBottom: 10,
+    borderRadius: 8,
+  },
+  fontText: {
+    fontFamily: 'Roboto',
+    marginBottom: 10,
+    fontSize: 16,
+  },
+  buttonStyle: {
+    backgroundColor: '#10CEED',
+    borderRadius: 8,
+    marginVertical: 10,
+    width: 160,
+  }
+});
 
 export default Session_join;
