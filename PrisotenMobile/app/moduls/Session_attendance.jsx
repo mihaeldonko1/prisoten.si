@@ -1,12 +1,20 @@
 import React from "react";
-import { View, Text } from 'react-native';
+import { View } from 'react-native';
+import { PaperProvider, Text } from 'react-native-paper';
+import Styles from "./Styles";
+import Header from "./Appbar";
+import Footer from "./BottomNavBar";
 
 function Session_attendance() {
-    
+
     return (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-            <Text>Vaša prisotnost je potrjena</Text>
-        </View>
+        <PaperProvider>
+            <Header />
+            <View style={Styles.containerPaper}>
+                <Text style={[Styles.fonts_roboto, {fontSize: 24}]}>Vaša prisotnost je potrjena</Text>
+            </View>
+            <Footer />
+        </PaperProvider>
     )
 }
 
