@@ -7,9 +7,29 @@ export default StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     backgroundColor: '#F5F5F5'
-},
+  },
 
+  fonts_roboto: {
+    fontFamily: 'Roboto'
+  },
 
+  buttonStyle: {
+    backgroundColor: '#10CEED',
+    borderRadius: 8,
+    marginTop: 32,
+    width: 110,
+  },
+
+  containerStyleModal: {
+    backgroundColor: 'white',
+    padding: 20,
+    height: '20%',
+    width: '60%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    alignSelf: "center",
+    borderRadius: 8
+  },
 
   container: {
     justifyContent: 'center',

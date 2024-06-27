@@ -4,7 +4,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 
 import Styles from './Styles';
-import { Button, PaperProvider, Text } from 'react-native-paper';
+import { Button, PaperProvider, Text, Portal, Modal } from 'react-native-paper';
 import Header from './Appbar';
 import Footer from './BottomNavBar';
 
@@ -19,47 +19,50 @@ function QRScanner() {
 
     const [inputValue, setInputValue] = useState('');
 
+    //UI
+    const [visible, setVisible] = useState(false)
+    const hideModal = () => setVisible(false);
+
     useEffect(() => {
         if (inputValue != '') {
+            const ws = new WebSocket('ws://194.152.25.94:8080');
 
-            // const ws = new WebSocket('ws://194.152.25.94:8080');
+            ws.onopen = () => {
+                console.log('WebSocket connection opened');
+                const message = {
+                    action: 'room_exists',
+                    roomCode: inputValue,
+                };
+                ws.send(JSON.stringify(message));
+            };
 
-            // ws.onopen = () => {
-            //     console.log('WebSocket connection opened');
-            //     const message = {
-            //         action: 'room_exists',
-            //         roomCode: inputValue,
-            //     };
-            //     ws.send(JSON.stringify(message));
-            // };
+            ws.onmessage = (e) => {
+                const response = JSON.parse(e.data);
+                // console.log('Received response:', response);
 
-            // ws.onmessage = (e) => {
-            //     const response = JSON.parse(e.data);
-            //     // console.log('Received response:', response);
+                if (response.action === 'room_exists' && response.exists) {
+                    ws.close();
+                    // console.log('WebSocket connection manually closed');
+                    router.push({
+                        pathname: '/moduls/Session_biometric_location',
+                        params: {
+                            user: JSON.stringify(userObj),
+                            data: JSON.stringify(inputValue),
+                        },
+                    });
+                } else {
+                    // UI Modal
+                    setVisible(true)
+                }
+            };
 
-            //     if (response.action === 'room_exists' && response.exists) {
-            //         ws.close();
-            //         // console.log('WebSocket connection manually closed');
-            //         router.push({
-            //             pathname: '/moduls/Session_biometric_location',
-            //             params: {
-            //                 user: JSON.stringify(userObj),
-            //                 data: JSON.stringify(inputValue),
-            //             },
-            //         });
-            //     } else {
-            //         //UI fix needed - 
-            //         alert('Soba ne obstaja');
-            //     }
-            // };
+            ws.onerror = (e) => {
+                console.error('WebSocket error:', e.message);
+            };
 
-            // ws.onerror = (e) => {
-            //     console.error('WebSocket error:', e.message);
-            // };
-
-            // ws.onclose = (e) => {
-            //     console.log('WebSocket connection closed:', e.code, e.reason);
-            // };
+            ws.onclose = (e) => {
+                console.log('WebSocket connection closed:', e.code, e.reason);
+            };
         }
     }, [inputValue]);
 
@@ -92,6 +95,16 @@ function QRScanner() {
 
     return (
         <PaperProvider>
+            <Portal>
+                <Modal
+                    visible={visible}
+                    onDismiss={hideModal}
+                    contentContainerStyle={Styles.containerStyleModal}
+                >
+                    <Text style={Styles.fonts_roboto}>Soba ne obstaja!</Text>
+                    <Button style={Styles.buttonStyle} mode='contained' onPress={hideModal}>Skrij</Button>
+                </Modal>
+            </Portal>
             <Header />
             <View style={Styles.containerPaper}>
                 <CameraView
@@ -115,11 +128,6 @@ function QRScanner() {
 }
 
 const styles = StyleSheet.create({
-    cameraContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
     camera: {
         width: '80%',
         height: '80%',

@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button as RNButton, StyleSheet } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { router } from 'expo-router';
+import { View, TextInput, StyleSheet } from 'react-native';
+import { useLocalSearchParams, router } from 'expo-router';
 
-import { Button, PaperProvider } from 'react-native-paper';
+import { Button, PaperProvider, Portal, Modal, Text } from 'react-native-paper';
 import Header from './Appbar';
 import Footer from './BottomNavBar';
 
@@ -16,6 +15,9 @@ function Session_join() {
 
   const [inputValue, setInputValue] = useState('');
 
+  //UI
+  const [visible, setVisible] = useState(false)
+  const hideModal = () => setVisible(false);
 
   //Normal on click 
   const handleJoinClick = () => {
@@ -44,8 +46,8 @@ function Session_join() {
           },
         });
       } else {
-        //UI fix needed - 
-        alert('Soba ne obstaja');
+        // UI Modal
+        setVisible(true)
       }
     };
 
@@ -72,11 +74,21 @@ function Session_join() {
 
   return (
     <PaperProvider>
+      <Portal>
+        <Modal
+          visible={visible}
+          onDismiss={hideModal}
+          contentContainerStyle={Styles.containerStyleModal}
+        >
+          <Text style={Styles.fonts_roboto}>Soba ne obstaja!</Text>
+          <Button style={Styles.buttonStyle} mode='contained' onPress={hideModal}>Skrij</Button>
+        </Modal>
+      </Portal>
       <Header />
       <View style={Styles.containerPaper}>
         <Text style={styles.fontText}
-
         >Dobrodošli, {userObj.name}</Text>
+
         <TextInput
           style={styles.inputField}
           onChangeText={setInputValue}
@@ -95,7 +107,7 @@ function Session_join() {
           onPress={handleBarcodeSubpageClick}
           style={[styles.buttonStyle]} // Adjust width as needed
         >
-          QR KODA
+          QR Koda
         </Button>
       </View>
       <Footer />
