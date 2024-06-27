@@ -67,10 +67,10 @@ export default StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    overflow: 'hidden',
+    //overflow: 'hidden',
   },
   camera: {
     width: '80%', // Adjust as needed
-    height: '60%', // Adjust as needed
+    height: '80%', // Adjust as needed
   },
 });

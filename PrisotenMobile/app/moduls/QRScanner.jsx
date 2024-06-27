@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Button } from 'react-native';
+import { View, Text as RNText, Button as RNButton, StyleSheet } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 
 import Styles from './Styles';
+import { Button, PaperProvider, Text } from 'react-native-paper';
+import Header from './Appbar';
+import Footer from './BottomNavBar';
 
 
 function QRScanner() {
@@ -19,45 +22,44 @@ function QRScanner() {
     useEffect(() => {
         if (inputValue != '') {
 
+            // const ws = new WebSocket('ws://194.152.25.94:8080');
 
-            const ws = new WebSocket('ws://194.152.25.94:8080');
+            // ws.onopen = () => {
+            //     console.log('WebSocket connection opened');
+            //     const message = {
+            //         action: 'room_exists',
+            //         roomCode: inputValue,
+            //     };
+            //     ws.send(JSON.stringify(message));
+            // };
 
-            ws.onopen = () => {
-                console.log('WebSocket connection opened');
-                const message = {
-                    action: 'room_exists',
-                    roomCode: inputValue,
-                };
-                ws.send(JSON.stringify(message));
-            };
+            // ws.onmessage = (e) => {
+            //     const response = JSON.parse(e.data);
+            //     // console.log('Received response:', response);
 
-            ws.onmessage = (e) => {
-                const response = JSON.parse(e.data);
-                // console.log('Received response:', response);
+            //     if (response.action === 'room_exists' && response.exists) {
+            //         ws.close();
+            //         // console.log('WebSocket connection manually closed');
+            //         router.push({
+            //             pathname: '/moduls/Session_biometric_location',
+            //             params: {
+            //                 user: JSON.stringify(userObj),
+            //                 data: JSON.stringify(inputValue),
+            //             },
+            //         });
+            //     } else {
+            //         //UI fix needed - 
+            //         alert('Soba ne obstaja');
+            //     }
+            // };
 
-                if (response.action === 'room_exists' && response.exists) {
-                    ws.close();
-                    // console.log('WebSocket connection manually closed');
-                    router.push({
-                        pathname: '/moduls/Session_biometric_location',
-                        params: {
-                            user: JSON.stringify(userObj),
-                            data: JSON.stringify(inputValue),
-                        },
-                    });
-                } else {
-                    //UI fix needed - 
-                    alert('Soba ne obstaja');
-                }
-            };
+            // ws.onerror = (e) => {
+            //     console.error('WebSocket error:', e.message);
+            // };
 
-            ws.onerror = (e) => {
-                console.error('WebSocket error:', e.message);
-            };
-
-            ws.onclose = (e) => {
-                console.log('WebSocket connection closed:', e.code, e.reason);
-            };
+            // ws.onclose = (e) => {
+            //     console.log('WebSocket connection closed:', e.code, e.reason);
+            // };
         }
     }, [inputValue]);
 
@@ -83,27 +85,51 @@ function QRScanner() {
 
     const handleScannAgain = () => {
         setScanned(false);
+        setInputValue('');
     }
 
 
 
     return (
-        <View style={Styles.cameraContainer}>
-            <CameraView style={Styles.camera}
-                onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
-                barcodeScannerSettings={{
-                    barcodeTypes: ['qr', 'aztec']
-                }}
-            />
-            <Button
-                title="Skeniraj"
-                onPress={handleScannAgain}
-                style={Styles.margin_vertical}
-            />
-        </View>
-
+        <PaperProvider>
+            <Header />
+            <View style={Styles.containerPaper}>
+                <CameraView
+                    style={styles.camera}
+                    onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
+                    barcodeScannerSettings={{
+                        barcodeTypes: ['qr', 'aztec']
+                    }}
+                />
+                <Button
+                    mode="contained"
+                    onPress={handleScannAgain}
+                    style={styles.buttonStyle}
+                >
+                    Skeniraj
+                </Button>
+            </View>
+            <Footer />
+        </PaperProvider>
     )
 }
 
+const styles = StyleSheet.create({
+    cameraContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    camera: {
+        width: '80%',
+        height: '80%',
+    },
+    buttonStyle: {
+        backgroundColor: '#10CEED',
+        borderRadius: 8,
+        marginTop: 32,
+        width: 110,
+    },
+});
 
 export default QRScanner;

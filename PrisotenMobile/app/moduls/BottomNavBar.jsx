@@ -12,9 +12,7 @@ const Footer = () => {
     <Appbar
       style={[
         styles.bottom,
-        {
-          height: BOTTOM_APPBAR_HEIGHT + bottom,
-        },
+        { height: BOTTOM_APPBAR_HEIGHT + bottom },
       ]}
     >
       
