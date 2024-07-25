@@ -224,5 +224,6 @@ class RoomController extends Controller
 
         return view('createRoom', ['classrooms' => $dataArray]);
     }
+
 }
 
