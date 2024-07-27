@@ -14,51 +14,75 @@ use ReflectionClass;
 
 class StatisticsController extends Controller
 {
-    function getStatistics() {
+    public function getStatistics() {
         $userId = Auth::id();
         $results = DB::table('archive')->where('user_id', $userId)->get();
 
         $dataArray = json_decode(json_encode($results), true);
-        // To check the results
-        //dd($dataArray);
+
         return view('statistics', ['statistics' => $dataArray]);
     }
 
-
-
-    function getStudentStatistics(Request $request) {
-        // Get the input and decode it if necessary
-        $studentsInfo = $request->input('students');
-    
-        // Check if $studentsInfo is a JSON string and decode it
+    public function getStudentPopupStatistics($studentsInfo) {
         if (is_string($studentsInfo)) {
             $studentsInfo = json_decode($studentsInfo, true);
         }
     
-        Log::info($studentsInfo);
-    
-        // Initialize an empty array to store the students' data
         $studentsData = [];
     
-        // Ensure $studentsInfo is an array before processing
         if (is_array($studentsInfo)) {
-            // Loop through each student ID in the provided array
             foreach ($studentsInfo as $studentId) {
-                // Query the database table "ucenci" to get the student data based on the ID
                 $studentData = DB::table('ucenci')->where('id', $studentId)->first();
-    
-                // Store the queried data in the studentsData array
                 if ($studentData) {
                     $studentsData[] = $studentData;
                 }
             }
         }
-    
-        // Return the array containing all the students' data
-        return response()->json($studentsData);
+
+        return $studentsData;
     }
 
+    public function getPopupModalStatistics(Request $request) {
+        $studentsInfo = $request->input('students');
+        $classroomInfo = $request->input('classroom');
+
+        $classroomData = DB::table('ucilnica')->where('id', $classroomInfo)->first();
+
+        $studentsData = $this->getStudentPopupStatistics($studentsInfo);
+
+        return response()->json([
+            'students' => $studentsData,
+            'classroom' => $classroomData
+        ]);
+    }
+
+    public function removeStudentFromSession(Request $request) {
+        $room = $request->input('room');
+        $student = $request->input('student');
     
+        $studentsJson = null;
+    
+        $archive = DB::table('archive')->where('id', $room)->first();
+        
+        if ($archive) {
+            $students = json_decode($archive->students, true);
+    
+            if (($key = array_search($student, $students)) !== false) {
+                unset($students[$key]);
+                $students = array_values($students);
+                $studentsJson = json_encode($students);
 
+                DB::table('archive')->where('id', $room)->update(['students' => $studentsJson]);
+            }
+        }
+        if ($studentsJson) {
+            $studentsData = $this->getStudentPopupStatistics($studentsJson);
+            return response()->json([
+                'students' => $studentsData,
+                'roomId' => $room
+            ]);
+        } else {
+            return response()->json(['message' => 'Student not found or no update needed'], 404);
+        }
+    }
 }
-

@@ -5,19 +5,6 @@
         </h2>
 
     </x-slot>
-
-    
-
-
-
-
-
-
-
-
-
-
-
     <div class="container mt-5">
     <h2>Statistics</h2>
     <div class="row">
@@ -25,15 +12,20 @@
             <div class="col-md-4 mb-4">
                 <div class="card open_modal" data-toggle="modal" data-target="#dataModal" data-result="{{ json_encode($result) }}">
                     <div class="card-body">
-                        <h5 class="card-title">ID: {{ $result['id'] }}</h5>
-                        <p class="card-text"><strong>User ID:</strong> {{ $result['user_id'] }}</p>
-                        <p class="card-text"><strong>Code:</strong> {{ $result['code'] }}</p>
-                        <p class="card-text"><strong>Active:</strong> {{ $result['active'] }}</p>
-                        <p class="card-text"><strong>Students:</strong> {{ $result['students'] }}</p>
-                        <p class="card-text"><strong>Classroom ID:</strong> {{ $result['classroom_id'] }}</p>
-                        <p class="card-text"><strong>Closed At:</strong> {{ $result['closed_at'] }}</p>
-                        <p class="card-text"><strong>Created At:</strong> {{ $result['created_at'] }}</p>
-                        <p class="card-text"><strong>Updated At:</strong> {{ $result['updated_at'] }}</p>
+                        <p class="card-text"><strong>Room code:</strong> {{ $result['code'] }}</p>
+                        <p class="card-text"><strong>Number of participants:</strong>
+                        @php
+                            $students = json_decode($result['students'], true);
+                            $studentsCount = is_array($students) ? count($students) : 0;
+                        @endphp
+                        <span id="student-count-original">{{ $studentsCount }}</span>
+                        </p>
+                        <p class="card-text"><strong>Date:</strong>
+                        @php
+                            $date = \Carbon\Carbon::parse($result['closed_at'])->format('d/m/Y');
+                        @endphp
+                        {{ $date }}
+                        </p>
                     </div>
                 </div>
             </div>
@@ -47,20 +39,14 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="dataModalLabel">Details</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
             </div>
             <div class="modal-body">
-                <p><strong>ID:</strong> <span id="modal-id"></span></p>
-                <p><strong>User ID:</strong> <span id="modal-user-id"></span></p>
                 <p><strong>Code:</strong> <span id="modal-code"></span></p>
-                <p><strong>Active:</strong> <span id="modal-active"></span></p>
-                <p><strong>Students:</strong> <span id="modal-students"></span></p>
-                <p><strong>Classroom ID:</strong> <span id="modal-classroom-id"></span></p>
-                <p><strong>Closed At:</strong> <span id="modal-closed-at"></span></p>
-                <p><strong>Created At:</strong> <span id="modal-created-at"></span></p>
-                <p><strong>Updated At:</strong> <span id="modal-updated-at"></span></p>
+                <p><strong>Present Students:</strong> <span id="modal-students"></span></p>
+                <div id="students-box"></div>
+                <p><strong>Classroom:</strong> <span id="modal-classroom-id"></span></p>
+                <p><strong>Date:</strong> <span id="modal-date"></span></p>
+                <p><strong>Time:</strong> <span id="modal-time"></span></p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -69,41 +55,78 @@
     </div>
 </div>
 
-
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
 <script>
     $(document).ready(function() {
+       function removeStudentAttendance(studentId, roomId) {
+            axios.post('/removeStudentSession', { student: studentId, room: roomId})
+                .then(function(response) {
+                    fillStudents(response.data.students, response.data.roomId);
+                    $('#student-count-original').text(response.data.students.length);
+                })
+                .catch(function(error) {
+                    console.error('Error:', error);
+                });
+        }
+
+        function fillStudents(studentsArray, roomID) {
+            let studentsDisplay = "";
+            studentsArray.forEach(function(student) {
+                studentsDisplay += `
+                    <div class="students-card" data-student-id="${student.id}" data-room-id="${roomID}">
+                        <div class="remove-circle">X</div>
+                        <div class="green-circle"></div>
+                        <div class="student-info">
+                            <div class="student-fullname">${student.name}</div>
+                            <div class="student-mail">${student.email}</div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            $('#students-box').html(studentsDisplay);
+        }
+
+        function fillClassroom(classroomData) {
+            let classroomFullname = classroomData.building + "-" + classroomData.name;
+            $('#modal-classroom-id').text(classroomFullname);
+        }
+
+        function fillDates(created, closed) {
+            let datePart = created.split(' ')[0];
+            let [year, month, day] = datePart.split('-');
+            let formattedDate = `${day}/${month}/${year}`;
+            $('#modal-date').text(formattedDate);
+
+
+            let timeStarted = created.split(' ')[1];
+            let timeFinished = closed.split(' ')[1];
+
+            let fullTime = timeStarted + " - " + timeFinished;
+            $('#modal-time').text(fullTime);
+
+        }
+
         $('.open_modal').on('click', function() {
-            //console.log("opentext")
-
-
-            
-
             var result = $(this).data('result');
-            axios.post('/getStudentStatistics', { students: result.students})
-                    .then(function(response) {
-                        console.log('logging res:', response.data);
+            axios.post('/getStudentStatistics', { students: result.students, classroom: result.classroom_id})
+                .then(function(response) {
+                    fillStudents(response.data.students, result.id);
+                    fillClassroom(response.data.classroom);
+                    fillDates(result.created_at, result.closed_at);
+                    $('#modal-code').text(result.code);
+                })
+                .catch(function(error) {
+                    console.error('Error:', error);
+                });
+        });
 
-
-
-                        
-                        $('#modal-id').text(result.id);
-                        $('#modal-user-id').text(result.user_id);
-                        $('#modal-code').text(result.code);
-                        $('#modal-active').text(result.active);
-                        $('#modal-classroom-id').text(result.classroom_id);
-                        $('#modal-closed-at').text(result.closed_at);
-                        $('#modal-created-at').text(result.created_at);
-                        $('#modal-updated-at').text(result.updated_at);
-
-
-
-                    })
-                    .catch(function(error) {
-                        console.error('Error:', error);
-                    });
+        $(document).on('click', '.remove-circle', function() {
+            let studentId = $(this).closest('.students-card').data('student-id');
+            let roomId = $(this).closest('.students-card').data('room-id');
+            removeStudentAttendance(studentId, roomId);
         });
     });
 </script>
