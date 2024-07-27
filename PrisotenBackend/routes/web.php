@@ -24,6 +24,7 @@ Route::get('/createRoom', [RoomController::class, 'classroomServe'])->middleware
 Route::get('/statistics', [StatisticsController::class, 'getStatistics'])->middleware(['auth', 'verified'])->name('statistics');
 Route::post('/getStudentStatistics', [StatisticsController::class, 'getPopupModalStatistics'])->middleware(['auth', 'verified']);
 Route::post('/removeStudentSession', [StatisticsController::class, 'removeStudentFromSession'])->middleware(['auth', 'verified']);
+Route::post('/addStudentSession', [StatisticsController::class, 'addStudentFromSession'])->middleware(['auth', 'verified']);
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

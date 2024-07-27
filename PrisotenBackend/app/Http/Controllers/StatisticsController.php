@@ -77,9 +77,76 @@ class StatisticsController extends Controller
         }
         if ($studentsJson) {
             $studentsData = $this->getStudentPopupStatistics($studentsJson);
+            $archive = DB::table('archive')->where('id', $room)->first();
             return response()->json([
                 'students' => $studentsData,
-                'roomId' => $room
+                'roomId' => $room,
+                'result' => $archive 
+            ]);
+        } else {
+            return response()->json(['message' => 'Student not found or no update needed'], 404);
+        }
+    }
+
+    public function addStudentFromSession(Request $request) {
+        $room = $request->input('room');
+        $studentMail = $request->input('studentMail');
+        
+        // Check if the user with this email exists in the "ucenci" table
+        $student = DB::table('ucenci')->where('email', $studentMail)->first();
+        
+        if ($student) {
+            $studentId = $student->id;
+        } else {
+            // Extract the name from the email
+            $emailParts = explode('@', $studentMail);
+            $nameParts = explode('.', $emailParts[0]);
+            
+            // Remove any numeric characters from each part of the name
+            $nameParts = array_map(function($part) {
+                return preg_replace('/[0-9]+/', '', $part);
+            }, $nameParts);
+            
+            // Ensure the extracted name remains consistent
+            $name = ucwords(implode(' ', $nameParts));
+    
+            // Create a new user in the "ucilnica" table
+            $studentId = DB::table('ucenci')->insertGetId([
+                'email' => $studentMail,
+                'name' => $name,
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now(),
+            ]);
+        }
+    
+        // Retrieve the archive room
+        $archive = DB::table('archive')->where('id', $room)->first();
+    
+        if ($archive) {
+            // Decode the students array
+            $students = json_decode($archive->students, true);
+    
+            // Check if the $studentId already exists in the students array
+            if (!in_array($studentId, $students)) {
+                // Add the $studentId to the students array
+                $students[] = $studentId;
+    
+                // Encode the students array back to JSON
+                $studentsJson = json_encode($students);
+    
+                // Update the archive table
+                DB::table('archive')->where('id', $room)->update(['students' => $studentsJson]);
+            }
+        }
+
+    
+
+        if ($studentsJson) {
+            $studentsData = $this->getStudentPopupStatistics($studentsJson);
+            return response()->json([
+                'students' => $studentsData,
+                'roomId' => $room,
+                'result' => $archive 
             ]);
         } else {
             return response()->json(['message' => 'Student not found or no update needed'], 404);

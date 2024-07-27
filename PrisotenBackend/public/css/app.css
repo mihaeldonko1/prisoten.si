@@ -190,3 +190,6 @@ p {
     font-size: 14px;
     color: #555;
 }
+.addStudent{
+    display: none;
+}
