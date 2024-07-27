@@ -188,9 +188,8 @@
                             const updatedResult = response.data.result;
                             fillStudents(response.data.students, response.data.roomId);
                             $('#student-count-original' + response.data.roomId).text(response.data.students.length);
-                            changeResults(updatedResult); // Update card data-result attribute
+                            changeResults(updatedResult); 
 
-                            // Update the student array in the card's data-result attribute
                             const $card = $(`.open_modal[data-id='${openedRoom}']`);
                             if ($card.length) {
                                 let cardDataResult = JSON.parse($card.attr('data-result'));
