@@ -67,17 +67,25 @@ function QRScanner() {
     }, [inputValue]);
 
     if (!permission) {
-        // Camera permissions are still loading.
+        // Camera permissions still loading.
         return <View />;
     }
 
     if (!permission.granted) {
-        // Camera permissions are not granted yet.
         return (
-            <View style={styles.container}>
-                <Text style={{ textAlign: 'center' }}>We need your permission to show the camera</Text>
-                <Button onPress={requestPermission} title="grant permission" />
-            </View>
+            <PaperProvider>
+                <Header />
+                <View style={Styles.containerPaper}>
+                    <Text style={{ textAlign: 'center' }}>Potrebujemo vaše dovoljenje za dostop do kamere</Text>
+                    <Button mode="contained" 
+                    onPress={requestPermission} 
+                    style={styles.buttonStyle}
+                    title="grant permission">
+                        Dodeli!
+                    </Button>
+                </View>
+                <Footer />
+            </PaperProvider>
         );
     }
 
