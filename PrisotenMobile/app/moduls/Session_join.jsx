@@ -21,7 +21,7 @@ function Session_join() {
 
   //Normal on click 
   const handleJoinClick = () => {
-    const ws = new WebSocket('ws://194.152.25.94:8080');
+    const ws = new WebSocket('ws://86.58.51.222:8080');
 
     ws.onopen = () => {
       //console.log('WebSocket connection opened');
