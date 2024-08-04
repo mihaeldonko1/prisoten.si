@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { IconButton, Provider as PaperProvider, Text, ActivityIndicator } from 'react-native-paper';
+import { IconButton, Provider as PaperProvider, Text, Button, Portal, Modal  } from 'react-native-paper';
 import { router, useLocalSearchParams } from 'expo-router';
+import Styles from './Styles';
 
 import Header from './Appbar';
 import Footer from './BottomNavBar';
@@ -17,20 +18,24 @@ function Session_biometric_location() {
     const userObj = JSON.parse(user);
     const codeData = JSON.parse(data);
 
+    // Pop-up modal
+    const [visible, setVisible] = useState(false)
+    const hideModal = () => setVisible(false);
+
     // Icons
     const fingerprintIcon = require('../../assets/fingerprint.png')
     const locationIcon = require('../../assets/location.png')
 
     //States for check-ups
-    const [biometricsState, setbiometricsState] = useState(false);
-    const [locationState, setlocationState] = useState(false);
+    const [biometricsState, setBiometricsState] = useState(false);
+    const [locationState, setLocationState] = useState(false);
 
     // Loading biometrics states
     const [fingerprintLoading, setFingerprintLoading] = useState(false)
     const [locationLoading, setLocationLoading] = useState(false)
 
     //Location data state
-    const [location, setLocation] = useState(null);
+    const [location, setLocation] = useState();
     const [biometricData, setBiometricData] = useState(null);
 
     //WebSocket
@@ -47,10 +52,9 @@ function Session_biometric_location() {
 
     const webSocketStarter = () => {
         ws.current = new WebSocket('ws://86.58.51.222:8080');
-        //console.log('------ WebSocket useEffect -----');
 
         ws.current.onopen = () => {
-            //console.log('WebSocket connection opened');
+            console.log('WebSocket connection opened');
         };
 
         ws.current.onerror = (e) => {
@@ -72,7 +76,6 @@ function Session_biometric_location() {
     const sendWebSocketMessage = async () => {
         if (ws.current && ws.current.readyState === WebSocket.OPEN) {
             const oseba = new WebSocketObject('join', codeData, userObj.name, userObj.email, biometricData, location);
-            //console.log(JSON.stringify(oseba));
             const response = await sendWebSocketRequest(JSON.stringify(oseba));
             handleWebSocketResponse(response);
         } else {
@@ -122,7 +125,7 @@ function Session_biometric_location() {
     // Biometrija state
     useEffect(() => {
         if (biometricData) {
-            setbiometricsState(true); //Ta del kode povzroči reroute
+            setBiometricsState(true); //Ta del kode povzroči reroute
             setFingerprintLoading(false)
         }
     }, [biometricData]);
@@ -135,8 +138,12 @@ function Session_biometric_location() {
         if (!locationState) {
             setLocationLoading(true)
             const loc = await getLocation();
+            console.log(loc);
             if (loc) {
                 setLocation(loc);
+            }else if (loc == null) {
+                setVisible(true)
+                setLocationLoading(false)
             }
         }
     };
@@ -145,7 +152,7 @@ function Session_biometric_location() {
     useEffect(() => {
         if (location) {
             console.log(`location data: ${JSON.stringify(location)}`);
-            setlocationState(true);   //Ta del kode povzroči reroute
+            setLocationState(true);   //Ta del kode povzroči reroute
             setLocationLoading(false)
         }
     }, [location]);
@@ -164,6 +171,16 @@ function Session_biometric_location() {
 
     return (
         <PaperProvider>
+            <Portal>
+                <Modal
+                    visible={visible}
+                    onDismiss={hideModal}
+                    contentContainerStyle={Styles.containerStyleModal}
+                >
+                    <Text style={Styles.fonts_roboto}>Storitve za lokacijo so potrebne!</Text>
+                    <Button style={Styles.buttonStyle} mode='contained' onPress={hideModal}>Skrij</Button>
+                </Modal>
+            </Portal>
             <Header />
             <View style={styles.container}>
                 <View style={styles.buttonContainer}>

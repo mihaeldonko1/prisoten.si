@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Button as RNButton, Text as RNText, StyleSheet } from 'react-native';
+import { View, Text as RNText, StyleSheet } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import * as AuthSession from "expo-auth-session";
 import { router } from 'expo-router';

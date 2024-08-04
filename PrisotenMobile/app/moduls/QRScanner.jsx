@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text as RNText, Button as RNButton, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 
@@ -38,11 +38,9 @@ function QRScanner() {
 
             ws.onmessage = (e) => {
                 const response = JSON.parse(e.data);
-                // console.log('Received response:', response);
 
                 if (response.action === 'room_exists' && response.exists) {
                     ws.close();
-                    // console.log('WebSocket connection manually closed');
                     router.push({
                         pathname: '/moduls/Session_biometric_location',
                         params: {

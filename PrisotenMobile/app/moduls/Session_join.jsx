@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, TextInput, StyleSheet } from 'react-native';
+import { View, TextInput, StyleSheet, Keyboard } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 
 import { Button, PaperProvider, Portal, Modal, Text } from 'react-native-paper';
@@ -47,6 +47,7 @@ function Session_join() {
         });
       } else {
         // UI Modal
+        Keyboard.dismiss()
         setVisible(true)
       }
     };
