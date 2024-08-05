@@ -4,6 +4,7 @@
             {{ __('Statistics') }}
         </h2>
     </x-slot>
-
-
+    
+    {{json_encode($statistics)}}
+    {{--komentar--}}
 </x-app-layout>
