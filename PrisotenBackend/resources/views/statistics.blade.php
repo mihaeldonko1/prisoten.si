@@ -6,13 +6,14 @@
     </x-slot>
 
     <div class="container mt-5">
-        <h2>Statistics</h2>
         <div class="row">
             @foreach($statistics as $result)
                 <div class="col-md-4 mb-4">
                     <div class="card open_modal" data-toggle="modal" data-target="#dataModal" data-id="{{$result['id']}}" data-result="{{ json_encode($result) }}">
                         <div class="card-body">
                             <p class="card-text"><strong>Room code:</strong> {{ $result['code'] }}</p>
+                            <p class="card-text"><strong>Subject:</strong> {{ $result['subject'] }}</p>
+                            <p class="card-text"><strong>Group:</strong> {{ $result['school_group'] }}</p>
                             <p class="card-text"><strong>Number of participants:</strong>
                             @php
                                 $students = json_decode($result['students'], true);
@@ -62,8 +63,15 @@
                     </div>
                     <div class="modal-body">
                         <p><strong>Code:</strong> <span id="modal-code"></span></p>
-                        <p><strong>Present Students:</strong> <span id="modal-students"></span></p>
+                        <p><strong>Subject:</strong> <span id="modal-subject"></span></p>
+                        <p><strong>Group:</strong> <span id="modal-group"></span></p>
+                        <p><strong>Expected members:</strong> <span id="modal-max-members"></span></p>
+                        <p><strong>Present expected students:</strong> <span id="modal-students"></span></p>
                         <div id="students-box"></div>
+                        <p><strong>Mising students:</strong> <span id="modal-students"></span></p>
+                        <div id="students-missing-box"></div>
+                        <p><strong>Extra students:</strong> <span id="modal-students"></span></p>
+                        <div id="students-extra-box"></div>
                         <p><strong>Classroom:</strong> <span id="modal-classroom-id"></span></p>
                         <p><strong>Date:</strong> <span id="modal-date"></span></p>
                         <p><strong>Time:</strong> <span id="modal-time"></span></p>
@@ -87,9 +95,20 @@
             function removeStudentAttendance(studentId, roomId) {
                 axios.post('/removeStudentSession', { student: studentId, room: roomId })
                     .then(function(response) {
-                        changeResults(response.data.result)
-                        fillStudents(response.data.students, response.data.roomId);
-                        $('#student-count-original' + response.data.roomId).text(response.data.students.length);
+                        const updatedResult = response.data.result[0];
+                            if (response.data.hasOwnProperty('extra_students')) {
+                                $('#students-extra-box').html(fillStudents(response.data.extra_students, response.data.result[0].id));
+                            }
+
+                            if (response.data.hasOwnProperty('missing_students')) {
+                                $('#students-missing-box').html(fillMissingStudents(response.data.missing_students, response.data.result[0].id));
+                            }
+
+                            if (response.data.hasOwnProperty('expected_students')) {
+                                $('#students-box').html(fillStudents(response.data.expected_students, response.data.result[0].id));
+                            }
+
+                            changeResults(updatedResult); 
                     })
                     .catch(function(error) {
                         console.error('Error:', error);
@@ -119,7 +138,28 @@
                         </div>
                     `;
                 });
-                $('#students-box').html(studentsDisplay);
+
+                return studentsDisplay;
+                
+            }
+
+            function fillMissingStudents(studentsArray, roomID) {
+                let studentsDisplay = "";
+                studentsArray.forEach(function(student) {
+                    studentsDisplay += `
+                        <div class="students-card" data-student-id="${student.email}" data-room-id="${roomID}">
+                            <div class="add-circle">+</div>
+                            <div class="red-circle"></div>
+                            <div class="student-info">
+                                <div class="student-fullname">${student.name}</div>
+                                <div class="student-mail">${student.email}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                return studentsDisplay;
+                
             }
 
             function fillClassroom(classroomData) {
@@ -142,14 +182,21 @@
             $('.open_modal').on('click', function() {
                 const dataResult = $(this).attr('data-result');
                 const result = JSON.parse(dataResult);
+                console.log(result);
                 openedRoom = result.id;
-                axios.post('/getStudentStatistics', { students: result.students, classroom: result.classroom_id })
+                axios.post('/getStudentStatistics', { students: result.students, expected_students: result.subject_group.logged_students, classroom: result.classroom_id })
                     .then(function(response) {
-                        fillStudents(response.data.students, result.id);
+                        $('#students-box').html(fillStudents(response.data.joinedStudents, result.id));
+                        $('#students-extra-box').html(fillStudents(response.data.extraStudents, result.id));
+                        $('#students-missing-box').html(fillMissingStudents(response.data.missingStudents, result.id));
+        
                         fillClassroom(response.data.classroom);
                         fillDates(result.created_at, result.closed_at);
                         $('#modal-code').text(result.code);
-                        $('#modal-students').text(response.data.students.length);
+                        $('#modal-max-members').text(result.expected_students_joined_count+"/"+result.expected_students_count);
+                        $('#modal-group').text(result.school_group);
+                        $('#modal-subject').text(result.subject);
+                        $('#modal-students').text(response.data.joinedStudents.length);
                     })
                     .catch(function(error) {
                         console.error('Error:', error);
@@ -160,6 +207,12 @@
                 let studentId = $(this).closest('.students-card').data('student-id');
                 let roomId = $(this).closest('.students-card').data('room-id');
                 removeStudentAttendance(studentId, roomId);
+            });
+
+            $(document).on('click', '.add-circle', function() {
+                let studentId = $(this).closest('.students-card').data('student-id');
+                let roomId = $(this).closest('.students-card').data('room-id');
+                addStudentAttendance(studentId, roomId);
             });
 
             $('#addStudentToSession').on('click', function() {
@@ -180,26 +233,43 @@
                 $('.addStudent').show();
             });
 
-            $('#submitStudent').on('click', function() {
-                var email = $('#studentEmail').val();
-                if (email) {
-                    axios.post('/addStudentSession', { studentMail: email, room: openedRoom })
+            function addStudentAttendance(email, openedRoom){
+                axios.post('/addStudentSession', { studentMail: email, room: openedRoom })
                         .then(function(response) {
-                            const updatedResult = response.data.result;
-                            fillStudents(response.data.students, response.data.roomId);
-                            $('#student-count-original' + response.data.roomId).text(response.data.students.length);
+                            console.log(response.data.result[0]);
+                            const updatedResult = response.data.result[0];
+                            if (response.data.hasOwnProperty('extra_students')) {
+                                $('#students-extra-box').html(fillStudents(response.data.extra_students, response.data.result[0].id));
+                            }
+
+                            if (response.data.hasOwnProperty('missing_students')) {
+                                $('#students-missing-box').html(fillMissingStudents(response.data.missing_students, response.data.result[0].id));
+                            }
+
+                            if (response.data.hasOwnProperty('expected_students')) {
+                                $('#students-box').html(fillStudents(response.data.expected_students, response.data.result[0].id));
+                            }
+
                             changeResults(updatedResult); 
 
                             const $card = $(`.open_modal[data-id='${openedRoom}']`);
                             if ($card.length) {
-                                let cardDataResult = JSON.parse($card.attr('data-result'));
-                                cardDataResult.students = JSON.stringify(response.data.students.map(student => student.id));
+                                let cardDataResult = response.data.result[0];
+
                                 $card.attr('data-result', JSON.stringify(cardDataResult));
                             }
                         })
                         .catch(function(error) {
                             console.error('Error:', error);
                         });
+                    $('.addStudent').hide();
+                    $('.mainModalContentDetails').show();
+            }
+
+            $('#submitStudent').on('click', function() {
+                var email = $('#studentEmail').val();
+                if (email) {
+                    addStudentAttendance(email, openedRoom);
                     $('.addStudent').hide();
                     $('.mainModalContentDetails').show();
                 } else {

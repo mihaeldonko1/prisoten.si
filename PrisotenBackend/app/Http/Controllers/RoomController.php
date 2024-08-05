@@ -19,6 +19,8 @@ class RoomController extends Controller
         $code = $request->input('code');
         $id = $request->input('id');
         $classroom = $request->input('classroom');
+        $subject = $request->input('subject');
+        $group = $request->input('group');
     
         $room = new Room;
         $room->user_id = $id;
@@ -26,6 +28,8 @@ class RoomController extends Controller
         $room->active = true;
         $room->students = json_encode([]);  
         $room->classroom_id = $classroom;
+        $room->subject_id = $subject;
+        $room->school_group_id = $group;
         
 
         DB::table('rooms')->insert([
@@ -36,6 +40,8 @@ class RoomController extends Controller
             'classroom_id' => $room->classroom_id,
             'created_at' => Carbon::now(), 
             'updated_at' => Carbon::now(), 
+            'subject_id' => $room->subject_id,
+            'school_group_id' => $room->school_group_id,
         ]);
     
         return response()->json(['roomCode' => $code, 'message' => 'Room created successfully']);
@@ -188,6 +194,15 @@ class RoomController extends Controller
         return false;
     }
 
+    public function getGroupsBySubject($subjectId)
+    {
+        $groups = DB::table('SchoolGroup')
+                    ->where('subject_id', $subjectId)
+                    ->get(['id', 'name']) // Adjust the fields as per your table structure
+                    ->toArray();
+
+        return response()->json($groups);
+    }
 
 
 
@@ -198,10 +213,8 @@ class RoomController extends Controller
         $roomCode = $request->input('code');
         $timeLeft = $request->input('timeLeft');
 
-        // Dispatch the job to close the websocket after $timeLeft seconds
         Log::info($timeLeft);
         CloseWebSocketJob::dispatch($roomCode)->delay(now()->addSeconds($timeLeft));
-        //Log::info($roomCode);
 
         return response()->json(['status' => 'Job scheduled', 'roomCode' => $roomCode, 'timeLeft' => $timeLeft]);
     }
@@ -210,20 +223,42 @@ class RoomController extends Controller
     {
         $roomCode = $givenCode;
         $timeLeft = $givenTime;
-        // Dispatch the job to close the websocket after $timeLeft seconds
-        Log::info($timeLeft);
         CloseWebSocketJob::dispatch($roomCode)->delay(now()->addSeconds($timeLeft));
-        //Log::info($roomCode);
 
         return response()->json(['status' => 'Job scheduled', 'roomCode' => $roomCode, 'timeLeft' => $timeLeft]);
     }
     
     public function classroomServe(){
-        $data = DB::table('ucilnica')->get();
-        $dataArray = json_decode(json_encode($data), true);
+        $classroomData = DB::table('ucilnica')->get();
+        $userId = Auth::id();
 
-        return view('createRoom', ['classrooms' => $dataArray]);
+        $classroomDataArray = json_decode(json_encode($classroomData), true);
+
+        $SubjectGroupData = DB::table('subject_group')->where('user_id', $userId)->get();
+
+        $SubjectGroupData = $SubjectGroupData->map(function ($item) {
+            $subject = DB::table('Subject')->where('id', $item->subject_id)->first();
+            $group = DB::table('SchoolGroup')->where('id', $item->group_id)->first();
+        
+            $item->subject = $subject;
+            $item->group = $group;
+        
+            if ($subject && $group) {
+                $item->fullName = $subject->name . ' (' . $group->name . ')';
+            } else {
+                $item->fullName = null; 
+            }
+        
+            return (array) $item; // Convert each item to an array
+        })->toArray();
+        
+       
+        return view('createRoom', [
+            'classrooms' => $classroomDataArray,
+            'selectData' => $SubjectGroupData
+        ]);
     }
+    
 
 }
 

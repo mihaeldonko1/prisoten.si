@@ -12,7 +12,16 @@
                         <img id="close-room-modal" src="{{ asset('cdn/img/75519.png') }}" style="width: 50px;margin-right: 20px;margin-top: 20px;" />
                     </div>
                     <h1 class="mb-3 mt-5" style="font-size: 2.5rem;padding-top: 50px;">Create a custom room</h1>
-                    <div class="form-group" style="padding-left: 150px; padding-right: 150px">
+                    <div class="form-group mb-3" style="padding-left: 150px; padding-right: 150px">
+                        <label for="subject_select">Select a subject:</label>
+                        <select class="form-select" name="subject_id" id="subject_select">
+                            <option value="" selected>Select a subject...</option>
+                            @foreach($selectData as $data)
+                                <option value="{{ $data['subject']->id }}">{{ $data['subject']->name }} - Year {{ $data['subject']->year }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="form-group mb-3" style="padding-left: 150px; padding-right: 150px">
                         <select class="form-select" name="your_select_name" id="your_select_id">
                         <option value="" selected>Select a classroom...</option>
                             @foreach($classrooms as $classroom)
@@ -56,12 +65,13 @@
             </div>
         </div>
     </div>
-
-
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
 <script>
     const socketUrl = @json(config('app.socket_url'));
     var dataId = null;
     var roomCrafted = null;
+    var dataSubjectId = null;
+    var dataGroupId = null; 
 
     function updateValue(value) {
         document.getElementById('sliderValue').textContent = value;
@@ -74,6 +84,10 @@
             });
     }
 
+    function getSelectedValue(selectElement) {
+        return selectElement.options[selectElement.selectedIndex].value;
+    }
+
     document.getElementById('close-room-modal').addEventListener('click', function() { 
         document.getElementById('setupSettings').style.display = "none";
     });
@@ -84,7 +98,7 @@
 
     document.getElementById('createRoomBtn').addEventListener('click', function() {
         const socket = new WebSocket(socketUrl);
-
+        console.log("test")
         socket.onopen = function() {
             console.log('WebSocket connection established');
             createMessage(socket);
@@ -117,7 +131,7 @@
                     });
 
 
-                    axios.post('/create-room', { code: genRoomCode, id: '{{ Auth::user()->id }}', classroom: dataId })
+                    axios.post('/create-room', { code: genRoomCode, id: '{{ Auth::user()->id }}', classroom: dataId, subject: dataSubjectId, group: dataGroupId })
                     .then(function(response) {
                         console.log('created room x');
                     })
@@ -188,6 +202,19 @@
             let parsedLocation = JSON.parse(selectedLocation);
 
             console.log(dataId);
+
+                const subjectSelect = document.querySelector('#subject_select');
+                const groupSelect = document.querySelector('#group_select');
+
+                console.log(subjectSelect);
+
+                // Get the selected values
+                dataSubjectId = getSelectedValue(subjectSelect);
+                dataGroupId = getSelectedValue(groupSelect);
+
+                // Log the selected values to the console
+                console.log('Selected Subject:', dataSubjectId);
+                console.log('Selected Group:', dataGroupId);
 
             var sliderElement = document.getElementById('slider');
             var diameterValue = sliderElement.value;
