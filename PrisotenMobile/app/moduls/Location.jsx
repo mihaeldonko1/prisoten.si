@@ -1,5 +1,4 @@
-import React, { useEffect } from 'react';
-
+import React from 'react';
 import * as Loc from 'expo-location';
 
 
@@ -8,8 +7,6 @@ export async function getLocation() {
         const servicesEnabled = await Loc.hasServicesEnabledAsync();
         
         if (!servicesEnabled) {
-            //UI fixes
-            alert('Lokacija mora biti omogočena!');
             return null;
         }
 
@@ -21,14 +18,10 @@ export async function getLocation() {
             return location;
         } else {
             console.log('Permission denied!');
-            //UI fixes
-            alert('Potrebno je dovoljenje za lokacijo!');
             return null;
         }
     } catch (error) {
         console.error('Error getting location:', error);
-        //UI fixes
-        alert('Prišlo je do napake pri pridobivanju lokacije!');
         return null;
     }
 }

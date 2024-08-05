@@ -1,7 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, Image, Animated } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+import { IconButton, Provider as PaperProvider, Text, Button, Portal, Modal  } from 'react-native-paper';
 import { router, useLocalSearchParams } from 'expo-router';
 import Styles from './Styles';
+
+import Header from './Appbar';
+import Footer from './BottomNavBar';
+
 import { getLocation } from './Location';
 import { Biometrics } from './Biometrics';
 import { WebSocketObject } from './WebSocketObject';
@@ -13,21 +18,24 @@ function Session_biometric_location() {
     const userObj = JSON.parse(user);
     const codeData = JSON.parse(data);
 
-    //Images
-    const imageSourceFingerprint = require('../../assets/fingerprint.png');
-    const imageSourceLocation = require('../../assets/location.png');
+    // Pop-up modal
+    const [visible, setVisible] = useState(false)
+    const hideModal = () => setVisible(false);
+
+    // Icons
+    const fingerprintIcon = require('../../assets/fingerprint.png')
+    const locationIcon = require('../../assets/location.png')
 
     //States for check-ups
-    const [biometricsState, setbiometricsState] = useState(false);
-    const [locationState, setlocationState] = useState(false);
+    const [biometricsState, setBiometricsState] = useState(false);
+    const [locationState, setLocationState] = useState(false);
 
-    //States for button colors
-    const [fingerprintButtonColor, setFingerprintButtonColor] = useState(new Animated.Value(0));
-    const [locationButtonColor, setLocationButtonColor] = useState(new Animated.Value(0));
-
+    // Loading biometrics states
+    const [fingerprintLoading, setFingerprintLoading] = useState(false)
+    const [locationLoading, setLocationLoading] = useState(false)
 
     //Location data state
-    const [location, setLocation] = useState(null);
+    const [location, setLocation] = useState();
     const [biometricData, setBiometricData] = useState(null);
 
     //WebSocket
@@ -43,11 +51,10 @@ function Session_biometric_location() {
 
 
     const webSocketStarter = () => {
-        ws.current = new WebSocket('ws://194.152.25.94:8080');
-        //console.log('------ WebSocket useEffect -----');
+        ws.current = new WebSocket('ws://86.58.51.222:8080');
 
         ws.current.onopen = () => {
-            //console.log('WebSocket connection opened');
+            console.log('WebSocket connection opened');
         };
 
         ws.current.onerror = (e) => {
@@ -69,7 +76,6 @@ function Session_biometric_location() {
     const sendWebSocketMessage = async () => {
         if (ws.current && ws.current.readyState === WebSocket.OPEN) {
             const oseba = new WebSocketObject('join', codeData, userObj.name, userObj.email, biometricData, location);
-            //console.log(JSON.stringify(oseba));
             const response = await sendWebSocketRequest(JSON.stringify(oseba));
             handleWebSocketResponse(response);
         } else {
@@ -104,39 +110,41 @@ function Session_biometric_location() {
             console.error('Room does not exist or invalid response');
         }
     };
-    //das
 
-
-
-    //Biometrija
+    // Biometrija
     let bio = false
     const handleFingreprintPress = async () => {
         console.log('Fingerprint pressed!');
-        bio = await Biometrics();
-        setBiometricData(bio);
-        //console.log(`bio state: ${bio}`);
-
+        if (!biometricsState) {
+            setFingerprintLoading(true)
+            bio = await Biometrics();
+            setBiometricData(bio);
+        }
     };
 
-    //Biometrija state
-
+    // Biometrija state
     useEffect(() => {
         if (biometricData) {
-            //console.log(`biostate data: ${JSON.stringify(biometricData)}`);
-            setbiometricsState(true); //Ta del kode povzroči reroute
-            // console.log(`Podatki: ${userObj.email}, Code data: ${codeData}`);
+            setBiometricsState(true); //Ta del kode povzroči reroute
+            setFingerprintLoading(false)
         }
     }, [biometricData]);
 
 
 
-    //Lokacija
+    // Lokacija 
     const handleLocationPress = async () => {
         console.log('Location pressed!');
-        const loc = await getLocation();
-        if (loc) {
-            //console.log(`Location received: ${JSON.stringify(loc)}`);
-            setLocation(loc);
+        if (!locationState) {
+            setLocationLoading(true)
+            const loc = await getLocation();
+            console.log(loc);
+            if (loc) {
+                setLocation(loc);
+            }else if (loc == null) {
+                setVisible(true)
+                setLocationLoading(false)
+            }
         }
     };
 
@@ -144,7 +152,8 @@ function Session_biometric_location() {
     useEffect(() => {
         if (location) {
             console.log(`location data: ${JSON.stringify(location)}`);
-            setlocationState(true);   //Ta del kode povzroči reroute
+            setLocationState(true);   //Ta del kode povzroči reroute
+            setLocationLoading(false)
         }
     }, [location]);
 
@@ -160,63 +169,72 @@ function Session_biometric_location() {
 
 
 
-    //Animacija
-    useEffect(() => {
-        if (biometricsState) {
-            Animated.timing(fingerprintButtonColor, {
-                toValue: 1,
-                duration: 500,
-                useNativeDriver: true,
-            }).start();
-        }
-    }, [biometricsState, fingerprintButtonColor]);
-
-    useEffect(() => {
-        if (locationState) {
-            Animated.timing(locationButtonColor, {
-                toValue: 1,
-                duration: 500,
-                useNativeDriver: true,
-            }).start();
-        }
-    }, [locationState, locationButtonColor]);
-
-
-    const fingerprintButtonBackgroundColor = fingerprintButtonColor.interpolate({
-        inputRange: [0, 1],
-        outputRange: ['white', '#10f52c'],
-    });
-
-
-    const locationButtonBackgroundColor = locationButtonColor.interpolate({
-        inputRange: [0, 1],
-        outputRange: ['white', '#10f52c'],
-    });
-
-
-
     return (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-
-            <TouchableOpacity style={[Styles.circulat_button, { backgroundColor: fingerprintButtonBackgroundColor }]} onPress={handleFingreprintPress}>
-                <View style={Styles.circular_container}>
-                    <Image source={imageSourceFingerprint} style={Styles.image_circular} />
+        <PaperProvider>
+            <Portal>
+                <Modal
+                    visible={visible}
+                    onDismiss={hideModal}
+                    contentContainerStyle={Styles.containerStyleModal}
+                >
+                    <Text style={Styles.fonts_roboto}>Storitve za lokacijo so potrebne!</Text>
+                    <Button style={Styles.buttonStyle} mode='contained' onPress={hideModal}>Skrij</Button>
+                </Modal>
+            </Portal>
+            <Header />
+            <View style={styles.container}>
+                <View style={styles.buttonContainer}>
+                    <IconButton
+                        mode='contained'
+                        icon={fingerprintIcon}
+                        iconColor='black'
+                        containerColor={biometricsState ? '#31F786' : '#10CEED'}
+                        size={64}
+                        onPress={() => handleFingreprintPress()}
+                        style={styles.iconButton}
+                        loading={fingerprintLoading}
+                    />
+                    <Text style={styles.text}>Biometrija</Text>
                 </View>
-            </TouchableOpacity>
-
-            <Text style={Styles.margin_vertical}>Pritisnite za identifikacijo</Text>
-
-            <TouchableOpacity style={[Styles.circulat_button, { backgroundColor: locationButtonBackgroundColor }]} onPress={handleLocationPress}>
-                <View style={Styles.circular_container}>
-                    <Image source={imageSourceLocation} style={Styles.image_circular} />
+                <View style={styles.buttonContainer}>
+                    <IconButton
+                        mode='contained'
+                        icon={locationIcon}
+                        iconColor='black'
+                        containerColor={locationState ? '#31F786' : '#10CEED'}
+                        size={64}
+                        onPress={() => handleLocationPress()}
+                        style={styles.iconButton}
+                        loading={locationLoading}
+                    />
+                    <Text style={styles.text}>Lokacija</Text>
                 </View>
-            </TouchableOpacity>
-
-            <Text style={Styles.margin_vertical}>Pritisnite za lokacijo</Text>
-
-        </View>
-    )
+            </View>
+            <Footer />
+        </PaperProvider>
+    );
 }
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        flexDirection: 'row',
+        padding: 16,
+        backgroundColor: '#F5F5F5'
+    },
+    buttonContainer: {
+        alignItems: 'center',
+        margin: 10,
+    },
+    iconButton: {
+        marginBottom: 5,
+    },
+    text: {
+        fontSize: 16,
+    },
+});
 
 
 export default Session_biometric_location;

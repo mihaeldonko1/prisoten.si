@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Button } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 
 import Styles from './Styles';
+import { Button, PaperProvider, Text, Portal, Modal } from 'react-native-paper';
+import Header from './Appbar';
+import Footer from './BottomNavBar';
 
 
 function QRScanner() {
@@ -16,10 +19,12 @@ function QRScanner() {
 
     const [inputValue, setInputValue] = useState('');
 
+    //UI
+    const [visible, setVisible] = useState(false)
+    const hideModal = () => setVisible(false);
+
     useEffect(() => {
         if (inputValue != '') {
-
-
             const ws = new WebSocket('ws://194.152.25.94:8080');
 
             ws.onopen = () => {
@@ -33,11 +38,9 @@ function QRScanner() {
 
             ws.onmessage = (e) => {
                 const response = JSON.parse(e.data);
-                // console.log('Received response:', response);
 
                 if (response.action === 'room_exists' && response.exists) {
                     ws.close();
-                    // console.log('WebSocket connection manually closed');
                     router.push({
                         pathname: '/moduls/Session_biometric_location',
                         params: {
@@ -46,8 +49,8 @@ function QRScanner() {
                         },
                     });
                 } else {
-                    //UI fix needed - 
-                    alert('Soba ne obstaja');
+                    // UI Modal
+                    setVisible(true)
                 }
             };
 
@@ -62,17 +65,25 @@ function QRScanner() {
     }, [inputValue]);
 
     if (!permission) {
-        // Camera permissions are still loading.
+        // Camera permissions still loading.
         return <View />;
     }
 
     if (!permission.granted) {
-        // Camera permissions are not granted yet.
         return (
-            <View style={styles.container}>
-                <Text style={{ textAlign: 'center' }}>We need your permission to show the camera</Text>
-                <Button onPress={requestPermission} title="grant permission" />
-            </View>
+            <PaperProvider>
+                <Header />
+                <View style={Styles.containerPaper}>
+                    <Text style={{ textAlign: 'center' }}>Potrebujemo vaše dovoljenje za dostop do kamere</Text>
+                    <Button mode="contained" 
+                    onPress={requestPermission} 
+                    style={styles.buttonStyle}
+                    title="grant permission">
+                        Dodeli!
+                    </Button>
+                </View>
+                <Footer />
+            </PaperProvider>
         );
     }
 
@@ -83,27 +94,56 @@ function QRScanner() {
 
     const handleScannAgain = () => {
         setScanned(false);
+        setInputValue('');
     }
 
 
 
     return (
-        <View style={Styles.cameraContainer}>
-            <CameraView style={Styles.camera}
-                onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
-                barcodeScannerSettings={{
-                    barcodeTypes: ['qr', 'aztec']
-                }}
-            />
-            <Button
-                title="Skeniraj"
-                onPress={handleScannAgain}
-                style={Styles.margin_vertical}
-            />
-        </View>
-
+        <PaperProvider>
+            <Portal>
+                <Modal
+                    visible={visible}
+                    onDismiss={hideModal}
+                    contentContainerStyle={Styles.containerStyleModal}
+                >
+                    <Text style={Styles.fonts_roboto}>Soba ne obstaja!</Text>
+                    <Button style={Styles.buttonStyle} mode='contained' onPress={hideModal}>Skrij</Button>
+                </Modal>
+            </Portal>
+            <Header />
+            <View style={Styles.containerPaper}>
+                <CameraView
+                    style={styles.camera}
+                    onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
+                    barcodeScannerSettings={{
+                        barcodeTypes: ['qr', 'aztec']
+                    }}
+                />
+                <Button
+                    mode="contained"
+                    onPress={handleScannAgain}
+                    style={styles.buttonStyle}
+                >
+                    Skeniraj
+                </Button>
+            </View>
+            <Footer />
+        </PaperProvider>
     )
 }
 
+const styles = StyleSheet.create({
+    camera: {
+        width: '80%',
+        height: '80%',
+    },
+    buttonStyle: {
+        backgroundColor: '#10CEED',
+        borderRadius: 8,
+        marginTop: 32,
+        width: 110,
+    },
+});
 
 export default QRScanner;

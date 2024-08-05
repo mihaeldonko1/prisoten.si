@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { router } from 'expo-router';
+import { View, TextInput, StyleSheet, Keyboard } from 'react-native';
+import { useLocalSearchParams, router } from 'expo-router';
 
+import { Button, PaperProvider, Portal, Modal, Text } from 'react-native-paper';
+import Header from './Appbar';
+import Footer from './BottomNavBar';
 
 import Styles from './Styles';
 
@@ -10,13 +12,16 @@ function Session_join() {
   const { user, tokens } = useLocalSearchParams();
   const tokensObj = JSON.parse(tokens);
   const userObj = JSON.parse(user);
-  
+
   const [inputValue, setInputValue] = useState('');
 
+  //UI
+  const [visible, setVisible] = useState(false)
+  const hideModal = () => setVisible(false);
 
   //Normal on click 
   const handleJoinClick = () => {
-    const ws = new WebSocket('ws://194.152.25.94:8080');
+    const ws = new WebSocket('ws://86.58.51.222:8080');
 
     ws.onopen = () => {
       //console.log('WebSocket connection opened');
@@ -41,8 +46,9 @@ function Session_join() {
           },
         });
       } else {
-        //UI fix needed - 
-        alert('Soba ne obstaja');
+        // UI Modal
+        Keyboard.dismiss()
+        setVisible(true)
       }
     };
 
@@ -68,26 +74,70 @@ function Session_join() {
   };
 
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <Text style={Styles.margin_vertical}>Dobrodošli, {userObj.name}</Text>
-      <TextInput
-        style={{ height: 40, borderColor: 'gray', borderWidth: 1, marginTop: 20, width: 200, paddingHorizontal: 10 }}
-        onChangeText={setInputValue}
-        value={inputValue}
-        placeholder="Vnesite kodo za prisotnost"
-      />
-      <Button
-        title="Potrdi"
-        onPress={handleJoinClick}
-        style={Styles.margin_vertical}
-      />
-      <Button
-        title="QR KODA"
-        onPress={handleBarcodeSubpageClick}
-        style={Styles.margin_vertical}
-      />
-    </View>
+    <PaperProvider>
+      <Portal>
+        <Modal
+          visible={visible}
+          onDismiss={hideModal}
+          contentContainerStyle={Styles.containerStyleModal}
+        >
+          <Text style={Styles.fonts_roboto}>Soba ne obstaja!</Text>
+          <Button style={Styles.buttonStyle} mode='contained' onPress={hideModal}>Skrij</Button>
+        </Modal>
+      </Portal>
+      <Header />
+      <View style={Styles.containerPaper}>
+        <Text style={styles.fontText}
+        >Dobrodošli, {userObj.name}</Text>
+
+        <TextInput
+          style={styles.inputField}
+          onChangeText={setInputValue}
+          value={inputValue}
+          placeholder="Vnesite kodo za prisotnost"
+        />
+        <Button
+          mode="contained"
+          onPress={handleJoinClick}
+          style={[styles.buttonStyle]} // Adjust width as needed
+        >
+          Potrdi
+        </Button>
+        <Button
+          mode="contained"
+          onPress={handleBarcodeSubpageClick}
+          style={[styles.buttonStyle]} // Adjust width as needed
+        >
+          QR Koda
+        </Button>
+      </View>
+      <Footer />
+    </PaperProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  inputField: {
+    height: 40,
+    borderColor: 'gray',
+    borderWidth: 1,
+    marginTop: 10,
+    width: 200,
+    paddingHorizontal: 10,
+    marginBottom: 10,
+    borderRadius: 8,
+  },
+  fontText: {
+    fontFamily: 'Roboto',
+    marginBottom: 10,
+    fontSize: 16,
+  },
+  buttonStyle: {
+    backgroundColor: '#10CEED',
+    borderRadius: 8,
+    marginVertical: 10,
+    width: 110,
+  }
+});
 
 export default Session_join;

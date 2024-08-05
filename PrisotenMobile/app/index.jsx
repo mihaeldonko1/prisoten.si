@@ -1,13 +1,15 @@
 import React from 'react';
-import { View } from 'react-native';
 import OfficeSignIn from './moduls/OfficeSignIn';
-import Styles from './moduls/Styles';
+import { PaperProvider } from 'react-native-paper';
+import Header from './moduls/Appbar';
+import Footer from './moduls/BottomNavBar';
 
-
-export default function App() {
+export default function App() { 
   return (
-    <View style={Styles.mainContainer}>
+    <PaperProvider>
+      <Header />
       <OfficeSignIn />
-    </View>
+      <Footer />
+    </PaperProvider>
   );
 }
