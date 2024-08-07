@@ -265,7 +265,7 @@ class StatisticsController extends Controller
         $room = $request->input('room');
         $studentMail = $request->input('studentMail');
         
-        $student = DB::table('ucenci')->where('email', $studentMail)->first();
+        $student = DB::table('ucenci')->where('id', $studentMail)->first();
         
         if ($student) {
             $studentId = $student->id;

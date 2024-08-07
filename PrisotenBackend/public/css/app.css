@@ -190,6 +190,15 @@ p {
     border: 1px solid black;
 }
 
+.card.open_modal {
+    cursor: pointer;
+}
+
+.teacher-img{
+    height: 50px !important;
+    cursor: pointer;
+}
+
 #preloader .spinner-border {
     width: 4rem;
     height: 4rem;

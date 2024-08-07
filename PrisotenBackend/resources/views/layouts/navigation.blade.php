@@ -22,7 +22,7 @@
                         {{ __('Create room') }}
                     </x-nav-link>
                     <x-nav-link :href="route('statistics')" :active="request()->routeIs('statistics')">
-                        {{ __('Previous Sessions') }}
+                        {{ __('Previous Lessons') }}
                     </x-nav-link>
                 </div>
             </div>

@@ -1,7 +1,8 @@
+@section('title', 'Previous Lessons')
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('Previous Sessions') }}
+            {{ __('Previous Lessons') }}
         </h2>
     </x-slot>
         <div class="container mt-3">
@@ -93,19 +94,22 @@
     $(document).ready(function() {
         var openedRoom;
 
+    $('#addStudentToSession').on('click', function() {
+        $('.mainModalContentDetails').hide();
+        $('.addStudent').show();
+    });
+
      function getQueryParam(param) {
             let urlParams = new URLSearchParams(window.location.search);
             return urlParams.get(param);
         }
 
-        // Set the values from the URL to the fields
         function setFieldValues() {
             var subject = getQueryParam('subject');
             var group = getQueryParam('group');
             var dateFrom = getQueryParam('date-from');
             var dateTo = getQueryParam('date-to');
 
-            // Set Select2 values
             if (subject) {
                 $('#subject-group-select').val(subject).trigger('change');
             }
@@ -114,7 +118,6 @@
                 $('#subject-group-select').val(group).trigger('change');
             }
 
-            // Set Datepicker values
             if (dateFrom) {
                 $('#date-from').datepicker('setDate', dateFrom);
             }
@@ -124,13 +127,11 @@
             }
         }
 
-        // Initialize Select2
         $('#subject-group-select').select2({
             placeholder: 'Search and select a subject group',
             allowClear: true
         });
 
-        // Initialize Bootstrap Datepicker
         $('.datepicker').datepicker({
             format: 'dd/mm/yyyy',
             autoclose: true,
@@ -138,10 +139,8 @@
             clearBtn: true
         });
 
-        // Set the initial values based on the URL query parameters
         setFieldValues();
 
-        // Event delegation for modal opening
         $(document).on('click', '.open_modal', function() {
             const dataResult = $(this).attr('data-result');
             const result = JSON.parse(dataResult);
@@ -150,39 +149,28 @@
             loadStudentStatistics(result);
         });
 
-        // Event delegation for removing student attendance
         $(document).on('click', '.remove-circle', function() {
             let studentId = $(this).closest('.students-card').data('student-id');
             let roomId = $(this).closest('.students-card').data('room-id');
             removeStudentAttendance(studentId, roomId);
         });
 
-        // Event delegation for adding student attendance
         $(document).on('click', '.add-circle', function() {
             let studentId = $(this).closest('.students-card').data('student-id');
             let roomId = $(this).closest('.students-card').data('room-id');
             addStudentAttendance(studentId, roomId);
         });
 
-        // Filter button click event
         $('#filter-button').on('click', function() {
             filterStatistics();
         });
 
-        // Add Student to Session modal handling
-        $('#addStudentToSession').on('click', function() {
-            $('#dataModal').modal('hide');
-            $('#addStudentModal').modal('show');
-        });
-
-        // Switch modals
         function switchModals(hideModal, showModal) {
             $(hideModal).one('hidden.bs.modal', function() {
                 $(showModal).modal('show');
             }).modal('hide');
         }
 
-        // Handle adding student to session
         $('#submitStudent').on('click', function() {
             var email = $('#studentEmail').val();
             if (email) {
@@ -194,13 +182,11 @@
             }
         });
 
-        // Handle canceling student submission
         $('#cancelSubmitStudent').on('click', function() {
             $('.addStudent').hide();
             $('.mainModalContentDetails').show();
         });
 
-        // Filter statistics via AJAX
         function filterStatistics() {
             var selectedOption = $('#subject-group-select').find('option:selected');
             var groupId = selectedOption.data('group'); 
@@ -232,7 +218,6 @@
             var newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + (queryParams ? '?' + queryParams : '');
             history.pushState({path: newUrl}, '', newUrl);
 
-            // Show the preloader
             $('#preloader').show();
 
             $.ajax({
@@ -240,23 +225,19 @@
                 type: 'GET',
                 data: requestData,
                 success: function(response) {
-                    // Replace content with the new data
                     $('.container.mt-5').html(response);
                     reinitializeFunctions();
 
-                    // Hide the preloader after content is loaded
                     $('#preloader').hide();
                 },
                 error: function(xhr, status, error) {
                     console.error("Error during AJAX request:", status, error);
 
-                    // Hide the preloader if there's an error
                     $('#preloader').hide();
                 }
             });
         }
 
-        // Load student statistics via AJAX
         function loadStudentStatistics(result) {
             axios.post('/getStudentStatistics', { 
                 students: result.students, 
@@ -281,7 +262,6 @@
             });
         }
 
-        // Remove student attendance
         function removeStudentAttendance(studentId, roomId) {
             axios.post('/removeStudentSession', { student: studentId, room: roomId })
                 .then(function(response) {
@@ -302,11 +282,13 @@
                 });
         }
 
-        // Add student attendance
         function addStudentAttendance(email, openedRoom){
+            console.log(email);
+            console.log(openedRoom);
             axios.post('/addStudentSession', { studentMail: email, room: openedRoom })
                 .then(function(response) {
                     const updatedResult = response.data.result[0];
+                    console.log(updatedResult);
                     if (response.data.hasOwnProperty('extra_students')) {
                         $('#students-extra-box').html(fillStudents(response.data.extra_students, updatedResult.id));
                     }
@@ -330,7 +312,6 @@
             $('.mainModalContentDetails').show();
         }
 
-        // Change result data in the modal
         function changeResults(newResult) {
             const $div = $(`.open_modal[data-id='${newResult.id}']`);
             if ($div.length) {
@@ -340,12 +321,11 @@
             }
         }
 
-        // Fill students in the modal
         function fillStudents(studentsArray, roomID) {
             let studentsDisplay = "";
             studentsArray.forEach(function(student) {
                 studentsDisplay += `
-                    <div class="students-card" data-student-id="${student.id}" data-room-id="${roomID}">
+                    <div class="students-card" data-student-mail="${student.email}" data-student-id="${student.id}" data-room-id="${roomID}">
                         <div class="remove-circle">X</div>
                         <div class="green-circle"></div>
                         <div class="student-info">
@@ -358,12 +338,11 @@
             return studentsDisplay;
         }
 
-        // Fill missing students in the modal
         function fillMissingStudents(studentsArray, roomID) {
             let studentsDisplay = "";
             studentsArray.forEach(function(student) {
                 studentsDisplay += `
-                    <div class="students-card" data-student-id="${student.id}" data-room-id="${roomID}">
+                    <div class="students-card" data-student-mail="${student.email}" data-student-id="${student.id}" data-room-id="${roomID}">
                         <div class="add-circle">+</div>
                         <div class="red-circle"></div>
                         <div class="student-info">
@@ -376,13 +355,11 @@
             return studentsDisplay;
         }
 
-        // Fill classroom data in the modal
         function fillClassroom(classroomData) {
             let classroomFullname = classroomData.building + "-" + classroomData.name;
             $('#modal-classroom-id').text(classroomFullname);
         }
 
-        // Fill dates in the modal
         function fillDates(created, closed) {
             let datePart = created.split(' ')[0];
             let [year, month, day] = datePart.split('-');
@@ -395,7 +372,6 @@
             $('#modal-time').text(fullTime);
         }
 
-        // Reinitialize functions after AJAX content load
         function reinitializeFunctions() {
             $(document).on('click', '.open_modal', function() {
                 const dataResult = $(this).attr('data-result');
