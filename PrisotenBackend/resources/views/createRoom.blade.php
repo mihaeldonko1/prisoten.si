@@ -1,3 +1,4 @@
+@section('title', 'Room creation')
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
@@ -33,7 +34,7 @@
                     </div>
                     <div class="slider-container">
                         <label for="slider">Select acceptance range for students:</label>
-                        <input type="range" class="form-control-range" id="slider" min="10" max="3000000000" value="50" oninput="updateValue(this.value)">
+                        <input type="range" class="form-control-range" id="slider" min="1" max="3000000000" value="1" oninput="updateValue(this.value)">
                         <p>Value: <span id="sliderValue">50</span> meters</p>
                     </div>
                     <button id="createRoomBtn" class="btn btn-dark mt-3" style="margin-bottom: 50px">Create Room</button><br>
