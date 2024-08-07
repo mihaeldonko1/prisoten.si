@@ -70,6 +70,8 @@ function QRScanner() {
     }
 
     if (!permission.granted) {
+        requestPermission();
+        
         return (
             <PaperProvider>
                 <Header />
