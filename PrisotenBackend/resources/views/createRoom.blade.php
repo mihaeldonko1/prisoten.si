@@ -4,6 +4,7 @@
             {{ __('Create room') }}
         </h2>
     </x-slot>
+
         <div id="setupSettings" style="position: fixed; background-color: #808080a8; height: 100vh; width: 100vw;z-index; 10000;display:none">
             <div class="container" style="margin-top: 50px">
 
@@ -17,7 +18,8 @@
                         <select class="form-select" name="subject_id" id="subject_select">
                             <option value="" selected>Select a subject...</option>
                             @foreach($selectData as $data)
-                                <option value="{{ $data['subject']->id }}">{{ $data['subject']->name }} - Year {{ $data['subject']->year }}</option>
+
+                                <option value="{{ $data['id'] }}" data-fullName="{{ $data['fullName'] }}">{{ $data['fullName'] }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -44,6 +46,7 @@
                     <div class="col-md-6 text-center" style="background-color:white; min-height: 50vh; margin-top: 30px; border-radius: 5px">
                         <button id="openCreateRoomModal" class="btn btn-dark mt-3">Create Room</button><br>
                         <div id="timer" class="timer-container" style="display: none;justify-content: center;">
+                            <h1 id="subject-title"></h1>
                             <div class="circle">
                                 <svg width="200" height="200">
                                     <circle cx="100" cy="100" r="90" class="background-circle"></circle>
@@ -72,6 +75,7 @@
     var roomCrafted = null;
     var dataSubjectId = null;
     var dataGroupId = null; 
+    var dataFullname = null;
 
     function updateValue(value) {
         document.getElementById('sliderValue').textContent = value;
@@ -82,6 +86,10 @@
                 if (error) console.error(error);
                 console.log('QR code generated successfully!');
             });
+    }
+
+    function getSelectedDataFullname(selectElement) {
+        return selectElement.options[selectElement.selectedIndex].getAttribute('data-fullname');
     }
 
     function getSelectedValue(selectElement) {
@@ -121,6 +129,8 @@
                     generateQR(genRoomCode);
                     document.getElementById('setupSettings').style.display = "none";
 
+                    document.getElementById("subject-title").innerHTML = dataFullname;
+                    
 
                     axios.post('/schedule-close-websocket', { code: genRoomCode, timeLeft: timeLeft})
                     .then(function(response) {
@@ -131,7 +141,7 @@
                     });
 
 
-                    axios.post('/create-room', { code: genRoomCode, id: '{{ Auth::user()->id }}', classroom: dataId, subject: dataSubjectId, group: dataGroupId })
+                    axios.post('/create-room', { code: genRoomCode, id: '{{ Auth::user()->id }}', classroom: dataId, subject: dataSubjectId })
                     .then(function(response) {
                         console.log('created room x');
                     })
@@ -194,6 +204,8 @@
         document.getElementById('joined_users').appendChild(userDiv);
     }
 
+
+
     function createMessage(socket) {
             var selectElement = document.getElementById('your_select_id');
             var selectedOption = selectElement.options[selectElement.selectedIndex];
@@ -201,25 +213,21 @@
             dataId = selectedOption.getAttribute('data-id');
             let parsedLocation = JSON.parse(selectedLocation);
 
-            console.log(dataId);
+            const subjectSelect = document.querySelector('#subject_select');
 
-                const subjectSelect = document.querySelector('#subject_select');
-                const groupSelect = document.querySelector('#group_select');
+            console.log(subjectSelect);
 
-                console.log(subjectSelect);
+            dataSubjectId = getSelectedValue(subjectSelect);
 
-                // Get the selected values
-                dataSubjectId = getSelectedValue(subjectSelect);
-                dataGroupId = getSelectedValue(groupSelect);
+            dataFullname = getSelectedDataFullname(subjectSelect);
 
-                // Log the selected values to the console
-                console.log('Selected Subject:', dataSubjectId);
-                console.log('Selected Group:', dataGroupId);
+            console.log(dataFullname);
+
+            console.log('Selected Subject:', dataSubjectId);
 
             var sliderElement = document.getElementById('slider');
             var diameterValue = sliderElement.value;
 
-            console.log(selectedLocation);
 
         const message = {
             "action": "create",

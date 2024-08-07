@@ -180,6 +180,11 @@ p {
     display: none;
 }
 
+#preloader .spinner-border {
+    width: 4rem;
+    height: 4rem;
+}
+
 .students-card:hover .remove-circle {
     display: block;
 }

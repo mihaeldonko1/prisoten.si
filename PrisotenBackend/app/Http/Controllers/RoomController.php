@@ -20,7 +20,8 @@ class RoomController extends Controller
         $id = $request->input('id');
         $classroom = $request->input('classroom');
         $subject = $request->input('subject');
-        $group = $request->input('group');
+
+        $subject_group = DB::table('subject_group')->where('id', $subject)->first();
     
         $room = new Room;
         $room->user_id = $id;
@@ -28,8 +29,8 @@ class RoomController extends Controller
         $room->active = true;
         $room->students = json_encode([]);  
         $room->classroom_id = $classroom;
-        $room->subject_id = $subject;
-        $room->school_group_id = $group;
+        $room->subject_id = $subject_group->subject_id;
+        $room->school_group_id = $subject_group->group_id;
         
 
         DB::table('rooms')->insert([

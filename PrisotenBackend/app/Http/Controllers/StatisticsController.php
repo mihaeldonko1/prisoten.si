@@ -21,11 +21,9 @@ class StatisticsController extends Controller
             $subject = DB::table('Subject')->where('id', $item['subject_id'])->first();
             $item['subject'] = $subject ? $subject->name : null;
     
-            // Fetch the school group related to the school_group_id in the archive table
             $schoolGroup = DB::table('SchoolGroup')->where('id', $item['school_group_id'])->first();
             $item['school_group'] = $schoolGroup ? $schoolGroup->name : null;
     
-            // Fetch the subject group if it matches the subject_id and school_group_id
             $subjectGroup = DB::table('subject_group')
                 ->where('subject_id', $item['subject_id'])
                 ->where('group_id', $item['school_group_id'])
@@ -37,41 +35,93 @@ class StatisticsController extends Controller
                 $item['subject_group'] = null;
             }
     
-            // Compare students with logged_students
-            $students = json_decode($item['students'], true); // Convert students to array
+            $students = json_decode($item['students'], true); 
             $loggedStudents = $item['subject_group'] ? json_decode($item['subject_group']['logged_students'], true) : [];
     
-            // Create expected_students_joined array
             $expectedStudentsJoined = array_intersect($loggedStudents, $students);
             $item['expected_students_joined'] = $expectedStudentsJoined;
             $item['expected_students_joined_count'] = count($expectedStudentsJoined);
     
-            // Create expected_students_missed array
             $expectedStudentsMissed = array_diff($loggedStudents, $students);
             $item['expected_students_missed'] = $expectedStudentsMissed;
             $item['expected_students_missed_count'] = count($expectedStudentsMissed);
     
-            // Create extra_students array
             $extraStudents = array_diff($students, $loggedStudents);
             $item['extra_students'] = $extraStudents;
             $item['extra_students_count'] = count($extraStudents);
     
-            // Add overall expected students count
             $item['expected_students_count'] = count($loggedStudents);
-            // Add overall joined students count
             $item['joined_students_count'] = count($students);
         }
 
         return $dataArray;
     }
 
-    public function getStatistics() {
-            $userId = Auth::id();
-            $results = DB::table('archive')->where('user_id', $userId)->get();
+    public function getStatistics(Request $request)
+    {
+        $userId = Auth::id();
+        
+        $query = DB::table('archive')->where('user_id', $userId);
 
-            $fullData = $this->getDetailedResults($results);
-
-            return view('statistics', ['statistics' => $fullData]);
+        $dateFrom = $request->has('date-from') ? Carbon::createFromFormat('d/m/Y', $request->input('date-from'))->format('Y-m-d') : null;
+        $dateTo = $request->has('date-to') ? Carbon::createFromFormat('d/m/Y', $request->input('date-to'))->format('Y-m-d') : null;
+    
+        // Log the converted dates
+        Log::info('Converted Date From:', [$dateFrom]);
+        Log::info('Converted Date To:', [$dateTo]);
+    
+        $query = DB::table('archive')->where('user_id', $userId);
+    
+        if ($dateFrom && $dateTo) {
+            Log::info('Using whereBetween with converted date-from and date-to');
+            $query->whereBetween('updated_at', [$dateFrom, $dateTo]);
+        } elseif ($dateFrom) {
+            Log::info('Using where with converted date-from');
+            $query->where('updated_at', '>=', $dateFrom);
+        } elseif ($dateTo) {
+            Log::info('Using where with converted date-to');
+            $query->where('updated_at', '<=', $dateTo);
+        }
+    
+        if ($request->has('subject')) {
+            $query->where('subject_id', $request->input('subject'));
+        }
+    
+        if ($request->has('group')) {
+            $query->where('school_group_id', $request->input('group'));
+        }
+    
+        $results = $query->get();
+        $fullData = $this->getDetailedResults($results);
+    
+        $extra_data = DB::table('subject_group')->where('user_id', $userId)->get();
+    
+        $extra_data = $extra_data->transform(function ($item) {
+            $subject = DB::table('Subject')->where('id', $item->subject_id)->first();
+            $group = DB::table('SchoolGroup')->where('id', $item->group_id)->first();
+            
+            $itemArray = (array) $item;
+            
+            $itemArray['subject_details'] = $subject ? (array) $subject : null;
+            $itemArray['group_details'] = $group ? (array) $group : null;
+            
+            if ($subject && $group) {
+                $itemArray['full_name'] = $subject->name . ' - ' . $group->name;
+            } else {
+                $itemArray['full_name'] = null;
+            }
+            
+            return $itemArray;
+        })->toArray();
+    
+        if ($request->ajax()) {
+            return view('partials._statistics', ['statistics' => $fullData])->render();
+        }
+    
+        return view('statistics', [
+            'statistics' => $fullData,
+            'extra_data' => $extra_data
+        ]);
     }
 
     public function getStudentPopupStatistics($studentsInfo) {
