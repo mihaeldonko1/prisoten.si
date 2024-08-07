@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { IconButton, Provider as PaperProvider, Text, Button, Portal, Modal  } from 'react-native-paper';
+import { IconButton, Provider as PaperProvider, Text, Button, Portal, Modal } from 'react-native-paper';
 import { router, useLocalSearchParams } from 'expo-router';
 import Styles from './Styles';
 
@@ -11,12 +11,17 @@ import { getLocation } from './Location';
 import { Biometrics } from './Biometrics';
 import { WebSocketObject } from './WebSocketObject';
 
+import { decrypt, encrypt } from './encription';
+import { WS_URL } from '@env';
+
 
 
 function Session_biometric_location() {
     const { user, data } = useLocalSearchParams()
     const userObj = JSON.parse(user);
     const codeData = JSON.parse(data);
+
+    const websocketURL = WS_URL
 
     // Pop-up modal
     const [visible, setVisible] = useState(false)
@@ -44,6 +49,7 @@ function Session_biometric_location() {
     const ws = useRef(null)
     const [wsState, setWsState] = useState(false)
 
+
     useEffect(() => {
         if (!wsState) {
             webSocketStarter()
@@ -51,7 +57,7 @@ function Session_biometric_location() {
         }
     }, []);
 
-    
+
     // Failed check
     const handleFailedResponse = () => {
         setVisibleFailed(true);
@@ -61,64 +67,72 @@ function Session_biometric_location() {
     }
 
     const webSocketStarter = () => {
-        ws.current = new WebSocket('ws://86.58.51.222:8080');
-
+        ws.current = new WebSocket(websocketURL);
+    
         ws.current.onopen = () => {
-            console.log('WebSocket connection opened');
+          console.log('WebSocket connection opened');
         };
-
+    
         ws.current.onerror = (e) => {
-            console.error('WebSocket error:', e.message);
+          console.error('WebSocket error:', e.message);
         };
-    }
-    const webSocketCloser = () => {
+    
+        ws.current.onmessage = (e) => {
+          const decryptedMessage = decrypt(e.data);
+          const response = JSON.parse(decryptedMessage);
+          console.log('Received response:', response);
+          handleWebSocketResponse(response);
+        };
+      };
+    
+      const webSocketCloser = () => {
         if (ws.current) {
-            ws.current.close();
-
-            ws.current.onclose = (e) => {
-                console.log('WebSocket connection closed:', e.code, e.reason);
-            };
+          ws.current.close();
+          ws.current.onclose = (e) => {
+            console.log('WebSocket connection closed:', e.code, e.reason);
+          };
         }
-    }
-
-
-    const sendWebSocketMessage = async () => {
+      };
+    
+      const sendWebSocketMessage = async () => {
         if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-            const oseba = new WebSocketObject('join', codeData, userObj.name, userObj.email, biometricData, location);
-            const response = await sendWebSocketRequest(JSON.stringify(oseba));
-            handleWebSocketResponse(response);
+          const oseba = new WebSocketObject('join', codeData, userObj.name, userObj.email, biometricData, location);
+          const encryptedMessage = encrypt(JSON.stringify(oseba));
+          const response = await sendWebSocketRequest(encryptedMessage);
+          handleWebSocketResponse(response);
         } else {
-            console.log('WebSocket is not open. Retrying...');
-            setTimeout(sendWebSocketMessage, 1000);  // Retry after 1 second
+          console.log('WebSocket is not open. Retrying...');
+          setTimeout(sendWebSocketMessage, 1000);  // Retry after 1 second
         }
-    };
-
-    const sendWebSocketRequest = (message) => {
+      };
+    
+      const sendWebSocketRequest = (message) => {
         return new Promise((resolve, reject) => {
-            ws.current.onmessage = (e) => {
-                let response = JSON.parse(e.data);
-                console.log('Resolve: ', response);
-                resolve(response);
-            };
-            ws.current.onerror = (e) => {
-                reject(new Error('WebSocket error'));
-            };
-            ws.current.send(message);
+          ws.current.onmessage = (e) => {
+            const decryptedMessage = decrypt(e.data);
+            const response = JSON.parse(decryptedMessage);
+            console.log('Resolve: ', response);
+            resolve(response);
+          };
+          ws.current.onerror = (e) => {
+            reject(new Error('WebSocket error'));
+          };
+          ws.current.send(message);
         });
-    };
-
-    const handleWebSocketResponse = (response) => {
+      };
+    
+      const handleWebSocketResponse = (response) => {
         console.log('Received response:', response);
-
+    
         if (response.action === 'joined') {
-            webSocketCloser();
-            router.push({
-                pathname: '/moduls/Session_attendance',
-            });
+          webSocketCloser();
+          router.push({
+            pathname: '/moduls/Session_attendance',
+          });
         } else {
-            handleFailedResponse();
+          handleFailedResponse();
         }
-    };
+      };
 
 
     // Biometrija
@@ -151,7 +165,7 @@ function Session_biometric_location() {
             console.log(loc);
             if (loc) {
                 setLocation(loc);
-            }else if (loc == null) {
+            } else if (loc == null) {
                 setVisible(true)
                 setLocationLoading(false)
             }

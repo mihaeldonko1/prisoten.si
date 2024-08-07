@@ -8,10 +8,15 @@ import { Button, PaperProvider, Text, Portal, Modal } from 'react-native-paper';
 import Header from './Appbar';
 import Footer from './BottomNavBar';
 
+import { decrypt, encrypt } from './encription';
+import { WS_URL } from '@env';
+
 
 function QRScanner() {
     const { user } = useLocalSearchParams()
     const userObj = JSON.parse(user);
+  
+    const websocketURL = WS_URL
 
     const [permission, requestPermission] = useCameraPermissions();
 
@@ -24,8 +29,8 @@ function QRScanner() {
     const hideModal = () => setVisible(false);
 
     useEffect(() => {
-        if (inputValue != '') {
-            const ws = new WebSocket('ws://194.152.25.94:8080');
+        if (inputValue !== '') {
+            const ws = new WebSocket(websocketURL);
 
             ws.onopen = () => {
                 console.log('WebSocket connection opened');
@@ -33,11 +38,15 @@ function QRScanner() {
                     action: 'room_exists',
                     roomCode: inputValue,
                 };
-                ws.send(JSON.stringify(message));
+                // Encrypt the message before sending
+                const encryptedMessage = encrypt(JSON.stringify(message));
+                ws.send(encryptedMessage);
             };
 
             ws.onmessage = (e) => {
-                const response = JSON.parse(e.data);
+                // Decrypt the received message
+                const decryptedMessage = decrypt(e.data);
+                const response = JSON.parse(decryptedMessage);
 
                 if (response.action === 'room_exists' && response.exists) {
                     ws.close();
@@ -50,7 +59,7 @@ function QRScanner() {
                     });
                 } else {
                     // UI Modal
-                    setVisible(true)
+                    setVisible(true);
                 }
             };
 
@@ -60,6 +69,11 @@ function QRScanner() {
 
             ws.onclose = (e) => {
                 console.log('WebSocket connection closed:', e.code, e.reason);
+            };
+
+            // Cleanup WebSocket connection on component unmount
+            return () => {
+                ws.close();
             };
         }
     }, [inputValue]);
@@ -71,16 +85,16 @@ function QRScanner() {
 
     if (!permission.granted) {
         requestPermission();
-        
+
         return (
             <PaperProvider>
                 <Header />
                 <View style={Styles.containerPaper}>
                     <Text style={{ textAlign: 'center' }}>Potrebujemo vaše dovoljenje za dostop do kamere</Text>
-                    <Button mode="contained" 
-                    onPress={requestPermission} 
-                    style={styles.buttonStyle}
-                    title="grant permission">
+                    <Button mode="contained"
+                        onPress={requestPermission}
+                        style={styles.buttonStyle}
+                        title="grant permission">
                         Dodeli!
                     </Button>
                 </View>

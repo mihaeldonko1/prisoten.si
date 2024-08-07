@@ -8,10 +8,15 @@ import Footer from './BottomNavBar';
 
 import Styles from './Styles';
 
+import { decrypt, encrypt } from './encription';
+import { WS_URL } from '@env';
+
 function Session_join() {
   const { user, tokens } = useLocalSearchParams();
   const tokensObj = JSON.parse(tokens);
   const userObj = JSON.parse(user);
+
+  const websocketURL = WS_URL
 
   const [inputValue, setInputValue] = useState('');
 
@@ -19,25 +24,30 @@ function Session_join() {
   const [visible, setVisible] = useState(false)
   const hideModal = () => setVisible(false);
 
-  //Normal on click 
-  const handleJoinClick = () => {
-    const ws = new WebSocket('ws://86.58.51.222:8080');
 
+  // Updated handleJoinClick function
+  const handleJoinClick = () => {
+    const ws = new WebSocket(websocketURL);
     ws.onopen = () => {
-      //console.log('WebSocket connection opened');
+      console.log('WebSocket connection opened');
       const message = {
         action: 'room_exists',
         roomCode: inputValue,
       };
-      ws.send(JSON.stringify(message));
+      // Encrypt the message before sending
+      const encryptedMessage = encrypt(JSON.stringify(message));
+      ws.send(encryptedMessage);
     };
 
     ws.onmessage = (e) => {
-      const response = JSON.parse(e.data);
-      //console.log('Received response:', response);
+      // Decrypt the received message
+      const decryptedMessage = decrypt(e.data);
+      const response = JSON.parse(decryptedMessage);
+      console.log('Received response:', response);
+
       if (response.action === 'room_exists' && response.exists) {
         ws.close();
-        //console.log('WebSocket connection manually closed');
+        console.log('WebSocket connection manually closed');
         router.push({
           pathname: '/moduls/Session_biometric_location',
           params: {
@@ -47,8 +57,8 @@ function Session_join() {
         });
       } else {
         // UI Modal
-        Keyboard.dismiss()
-        setVisible(true)
+        Keyboard.dismiss();
+        setVisible(true);
       }
     };
 
