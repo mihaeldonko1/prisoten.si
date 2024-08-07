@@ -33,7 +33,7 @@
                     </div>
                     <div class="slider-container">
                         <label for="slider">Select acceptance range for students:</label>
-                        <input type="range" class="form-control-range" id="slider" min="10" max="300" value="50" oninput="updateValue(this.value)">
+                        <input type="range" class="form-control-range" id="slider" min="10" max="3000000000" value="50" oninput="updateValue(this.value)">
                         <p>Value: <span id="sliderValue">50</span> meters</p>
                     </div>
                     <button id="createRoomBtn" class="btn btn-dark mt-3" style="margin-bottom: 50px">Create Room</button><br>
@@ -69,7 +69,8 @@
         </div>
     </div>
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
-<script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js" integrity="sha512-a+SUDuwNzXDvz4XrIcXHuCf089/iJAoN4lmrXJg18XnduKK6YlDHNRalv4yd1N40OKI80tFidF+rqTFKGPoWFQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script>
     const socketUrl = @json(config('app.socket_url'));
     var dataId = null;
     var roomCrafted = null;
@@ -77,15 +78,50 @@
     var dataGroupId = null; 
     var dataFullname = null;
 
+    // Load encryption key and IV from environment variables
+    const encryptionKey = @json(env('ENCRYPTION_KEY'));
+    const encryptionIV = @json(env('ENCRYPTION_IV'));
+
+    console.log("Encryption Key:", encryptionKey);
+    console.log("Encryption IV:", encryptionIV);
+
+    console.log(decrypt("dq4TDeMlsjZ0xAsAJerGOjvvqk2EabxteAw2KI8oRTZNuEY0WfaDOfRT9ulL7Lybd9lqW60mUv1p5CjVyG9qEknHZ49py6E9xbNZTsj9+5xqnDUw5OI19hwU63HMB1qcT3+rK35AMu4mJZgJg+sZBw44xSQlynjwF1yMRy8d4quESykyR3rBRxotT7N5wnUg4jVRz9SrRwLTIdyf1lL3mYxixbqO9afJkCWCC1GgLvw7NoBusOdnusdJHtZyHkau4z6T4F5glIXv3k5Fdla6nNUnzvIFu5H7ACCN46N3pHnb8PY0CC8906wiKgdkkgd7"))
+
+    // Function to encrypt data
+function encrypt(text) {
+    console.log("Encrypting:", text);
+    const encrypted = CryptoJS.AES.encrypt(text, CryptoJS.enc.Hex.parse(encryptionKey), {
+        iv: CryptoJS.enc.Hex.parse(encryptionIV),
+        mode: CryptoJS.mode.CBC,
+        padding: CryptoJS.pad.Pkcs7
+    });
+    const encryptedBase64 = encrypted.toString(); // AES encrypt returns a Base64 string by default
+    console.log("Encrypted message (Base64):", encryptedBase64);
+    return encryptedBase64;
+}
+
+// Function to decrypt data
+function decrypt(ciphertext) {
+    console.log("Decrypting (Base64):", ciphertext);
+    const bytes = CryptoJS.AES.decrypt(ciphertext, CryptoJS.enc.Hex.parse(encryptionKey), {
+        iv: CryptoJS.enc.Hex.parse(encryptionIV),
+        mode: CryptoJS.mode.CBC,
+        padding: CryptoJS.pad.Pkcs7
+    });
+    const decryptedText = bytes.toString(CryptoJS.enc.Utf8);
+    console.log("Decrypted message:", decryptedText);
+    return decryptedText;
+}
+
     function updateValue(value) {
         document.getElementById('sliderValue').textContent = value;
     }
 
-    function generateQR(code){
+    function generateQR(code) {
         QRCode.toCanvas(document.getElementById('qrcode'), code, { errorCorrectionLevel: 'H' }, function (error) {
-                if (error) console.error(error);
-                console.log('QR code generated successfully!');
-            });
+            if (error) console.error(error);
+            console.log('QR code generated successfully!');
+        });
     }
 
     function getSelectedDataFullname(selectElement) {
@@ -106,33 +142,34 @@
 
     document.getElementById('createRoomBtn').addEventListener('click', function() {
         const socket = new WebSocket(socketUrl);
-        console.log("test")
+        console.log("WebSocket connection initiated");
+
         socket.onopen = function() {
             console.log('WebSocket connection established');
             createMessage(socket);
         };
 
-        
         socket.onmessage = function(event) {
-            const dataObject = JSON.parse(event.data);
+            console.log("Raw received message:", event.data);
+            const decryptedData = decrypt(event.data);
+            const dataObject = JSON.parse(decryptedData);
             const actionValue = dataObject.action;
-            console.log(dataObject);
-            if(actionValue == "created"){
-                    let genRoomCode = dataObject.roomCode;
-                    roomCrafted = genRoomCode;
+            console.log('Received data:', dataObject);
 
-                    startTimer();
-                    document.getElementById("timer").style.display = "grid";
-                    document.getElementById("room-code-txt").style.display = "block";
-                    document.getElementById('openCreateRoomModal').style.display = "none";
-                    document.getElementById("roomkey").innerHTML = genRoomCode;
-                    generateQR(genRoomCode);
-                    document.getElementById('setupSettings').style.display = "none";
+            if (actionValue == "created") {
+                let genRoomCode = dataObject.roomCode;
+                roomCrafted = genRoomCode;
 
-                    document.getElementById("subject-title").innerHTML = dataFullname;
-                    
+                startTimer();
+                document.getElementById("timer").style.display = "grid";
+                document.getElementById("room-code-txt").style.display = "block";
+                document.getElementById('openCreateRoomModal').style.display = "none";
+                document.getElementById("roomkey").innerHTML = genRoomCode;
+                generateQR(genRoomCode);
+                document.getElementById('setupSettings').style.display = "none";
+                document.getElementById("subject-title").innerHTML = dataFullname;
 
-                    axios.post('/schedule-close-websocket', { code: genRoomCode, timeLeft: timeLeft})
+                axios.post('/schedule-close-websocket', { code: genRoomCode, timeLeft: timeLeft})
                     .then(function(response) {
                         console.log('Close WebSocket job scheduled:', response.data);
                     })
@@ -140,33 +177,31 @@
                         console.error('Error scheduling close WebSocket job:', error);
                     });
 
-
-                    axios.post('/create-room', { code: genRoomCode, id: '{{ Auth::user()->id }}', classroom: dataId, subject: dataSubjectId })
+                axios.post('/create-room', { code: genRoomCode, id: '{{ Auth::user()->id }}', classroom: dataId, subject: dataSubjectId })
                     .then(function(response) {
-                        console.log('created room x');
+                        console.log('Room created successfully');
                     })
                     .catch(function(error) {
-                        console.error('error room x');
+                        console.error('Error creating room:', error);
                     });
 
-
-            }else if(actionValue == "user_joined"){
-                console.log("joined user");
-                document.getElementById("user_list").style.display = "block"
+            } else if (actionValue == "user_joined") {
+                console.log("User joined");
+                document.getElementById("user_list").style.display = "block";
                 addUser(dataObject.name, dataObject.email, `{{ asset('cdn/img/360_F_553796090_XHrE6R9jwmBJUMo9HKl41hyHJ5gqt9oz.jpg') }}`);
 
-                axios.post('/join-room', { name: dataObject.name, email: dataObject.email, code: roomCrafted})
-                .then(function(response) {
-                    console.log('joined room x');
-                })
-                .catch(function(error) {
-                    console.error('error room x joined');
-                });
+                axios.post('/join-room', { name: dataObject.name, email: dataObject.email, code: roomCrafted })
+                    .then(function(response) {
+                        console.log('User joined room successfully');
+                    })
+                    .catch(function(error) {
+                        console.error('Error joining room:', error);
+                    });
             }
         };
 
         socket.onerror = function(error) {
-            console.error('WebSocket error: ', error);
+            console.error('WebSocket error:', error);
         };
 
         socket.onclose = function(event) {
@@ -193,7 +228,6 @@
         userName.textContent = name;
         userInfoDiv.appendChild(userName);
 
-
         const userEmail = document.createElement('p');
         userEmail.textContent = email;
         userInfoDiv.appendChild(userEmail);
@@ -204,30 +238,19 @@
         document.getElementById('joined_users').appendChild(userDiv);
     }
 
-
-
     function createMessage(socket) {
-            var selectElement = document.getElementById('your_select_id');
-            var selectedOption = selectElement.options[selectElement.selectedIndex];
-            var selectedLocation = selectedOption.value;
-            dataId = selectedOption.getAttribute('data-id');
-            let parsedLocation = JSON.parse(selectedLocation);
+        var selectElement = document.getElementById('your_select_id');
+        var selectedOption = selectElement.options[selectElement.selectedIndex];
+        var selectedLocation = selectedOption.value;
+        dataId = selectedOption.getAttribute('data-id');
+        let parsedLocation = JSON.parse(selectedLocation);
 
-            const subjectSelect = document.querySelector('#subject_select');
+        const subjectSelect = document.querySelector('#subject_select');
+        dataSubjectId = getSelectedValue(subjectSelect);
+        dataFullname = getSelectedDataFullname(subjectSelect);
 
-            console.log(subjectSelect);
-
-            dataSubjectId = getSelectedValue(subjectSelect);
-
-            dataFullname = getSelectedDataFullname(subjectSelect);
-
-            console.log(dataFullname);
-
-            console.log('Selected Subject:', dataSubjectId);
-
-            var sliderElement = document.getElementById('slider');
-            var diameterValue = sliderElement.value;
-
+        var sliderElement = document.getElementById('slider');
+        var diameterValue = sliderElement.value;
 
         const message = {
             "action": "create",
@@ -237,11 +260,14 @@
             "diameter": diameterValue
         };
 
-        console.log(JSON.stringify(message));
+        const encryptedMessage = encrypt(JSON.stringify(message));
+        console.log('Sending encrypted message:', encryptedMessage);
 
-        socket.send(JSON.stringify(message));
+        socket.send(encryptedMessage);
     }
 </script>
+
+
 <script>
         function updateJobTimer(newTime){
             //TODO implement job timer update
