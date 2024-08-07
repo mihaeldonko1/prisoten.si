@@ -21,6 +21,8 @@ function Session_biometric_location() {
     // Pop-up modal
     const [visible, setVisible] = useState(false)
     const hideModal = () => setVisible(false);
+    const [visibleFailed, setVisibleFailed] = useState(false)
+    const hideModalFailed = () => setVisibleFailed(false);
 
     // Icons
     const fingerprintIcon = require('../../assets/fingerprint.png')
@@ -49,6 +51,14 @@ function Session_biometric_location() {
         }
     }, []);
 
+    
+    // Failed check
+    const handleFailedResponse = () => {
+        setVisibleFailed(true);
+        setLocationState(false);
+        setBiometricsState(false);
+        setBiometricData(null);
+    }
 
     const webSocketStarter = () => {
         ws.current = new WebSocket('ws://86.58.51.222:8080');
@@ -70,7 +80,6 @@ function Session_biometric_location() {
             };
         }
     }
-
 
 
     const sendWebSocketMessage = async () => {
@@ -107,9 +116,10 @@ function Session_biometric_location() {
                 pathname: '/moduls/Session_attendance',
             });
         } else {
-            console.error('Room does not exist or invalid response');
+            handleFailedResponse();
         }
     };
+
 
     // Biometrija
     let bio = false
@@ -179,6 +189,14 @@ function Session_biometric_location() {
                 >
                     <Text style={Styles.fonts_roboto}>Storitve za lokacijo so potrebne!</Text>
                     <Button style={Styles.buttonStyle} mode='contained' onPress={hideModal}>Skrij</Button>
+                </Modal>
+                <Modal
+                    visible={visibleFailed}
+                    onDismiss={hideModalFailed}
+                    contentContainerStyle={Styles.containerStyleModal}
+                >
+                    <Text style={Styles.fonts_roboto}>Vaša lokacija se ne ujema z lokacijo učilnice!</Text>
+                    <Button style={Styles.buttonStyle} mode='contained' onPress={hideModalFailed}>Skrij</Button>
                 </Modal>
             </Portal>
             <Header />
